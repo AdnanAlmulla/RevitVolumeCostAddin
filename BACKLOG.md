@@ -52,9 +52,9 @@ override (suggested, not decided).
 
 ### [F-003] P3 — Time the 3D shape export on the largest tower (deferred)
 <!-- type: feature | added: 2026-11-25 -->
-**What:** For a possible 3D viewer on the website, the add-in would export per-element shapes keyed by Revit
+**What:** For the website's 3D viewer (decided 2026-11-25: three.js on the site), the add-in will export per-element shapes keyed by Revit
 element id. First step only: time that export on the largest tower model.
-**Why:** The export must not slow down a Save. The viewer approach itself is not yet confirmed by the engineer.
+**Why:** The export must not slow down a Save. The viewer approach is decided; only its timing is open.
 **Where:** A timing probe under `_harnesses/`.
 **Acceptance:** The export time on the largest tower is measured and put to the engineer.
 **Notes:** Deferred by the engineer (2026-11-25). The viewer side is the website repo's F-006.
