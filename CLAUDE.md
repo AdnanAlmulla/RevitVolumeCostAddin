@@ -29,8 +29,8 @@ Status (2026-11-25): **v0.1 planning.** No code yet.
 ## How work lands here
 
 - **Every contributor's change arrives as a pull request into `master`, and the engineer (Adnan Almulla)
-  reviews and merges it.** Contributors never push to `master`; the branch rule requires his approval, and
-  only he, as owner, can bypass it (GitHub won't let an author approve their own pull request). See
+  reviews and merges it.** Contributors never push to `master`. There is no branch rule (the account stays on
+  GitHub's free plan): the repo relies on trust, "unless proven otherwise" (engineer, 2026-11-25). See
   `CONTRIBUTING.md`.
 - **`src/Contracts` is shared with the website.** The website repo builds against a clone of this repo
   placed beside it, so a change to a snapshot class changes what the API receives. Keep changes additive
@@ -109,8 +109,11 @@ So each row needs:
 - Elements outside the table (stairs, ramps, upstands…) are still sent; the website files them under
   "Other / Misc".
 
-**Unknown (2026-11-25):** how the models mark division, element kind, pile type and concrete grade. The
-engineer is checking with the BIM technician (backlog F-002). Don't invent a convention: ask.
+**Division and concrete grade are instance parameters** on the elements (engineer, 2026-11-25). Still open
+(backlog F-002): the parameters' exact names, whether they become shared project parameters bound to the
+structural categories (a stable GUID across projects and Revit versions; suggested, not decided), how element
+kind and pile type are marked, and whether division can default from a per-project level mapping with the
+parameter as an override. The add-in reports elements whose parameter is blank; it never guesses a value.
 
 Whether the volumes in the model are right (overlaps, joins) is the Revit technician's job, not the
 add-in's.
