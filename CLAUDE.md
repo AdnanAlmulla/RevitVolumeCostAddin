@@ -17,6 +17,12 @@ off on 2026-11-25 so that Revit-side contributors work here only (engineer's rul
 put the product name in one MSBuild property (`Directory.Build.props`) that assembly names and root
 namespaces derive from, and nowhere else in code.
 
+**Who runs what in Revit** (engineer, 2026-11-25): the engineer does not open Revit. The BIM technician
+installs the add-in, fills the parameters, runs Export / Sync and does the per-release check. Every Revit step
+ends in a hand-off the engineer can use without Revit: an installer plus a one-page instruction sheet going to
+the technician; a snapshot JSON plus Revit's quantity schedule exported as CSV coming back. An automated test
+compares the two. Build plan: https://claude.ai/artifact/1N5ebV79ww98qsfvBJwv2a
+
 **This is not a CSi plugin.** If this repo is cloned under the engineer's `github repositories` folder,
 Claude Code also loads the folder-level `../CLAUDE.md`, written for the ETABS/SAFE plugin family. Those rules
 do **not** apply here: `cPlugin.Main`, `Finish(0)`, `cSapModel`, Avalonia hosting, the CSi API references,

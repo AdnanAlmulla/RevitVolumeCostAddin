@@ -26,8 +26,9 @@ Save, on Synchronize with Central and on a manual Sync, in the background, queue
 own small MSAL wrapper gets the API token. WPF UI.
 **Why:** The add-in is the website's only source of data.
 **Where:** `src/Addin/`, `src/Contracts/`, `tests/` (planned layout in `CLAUDE.md`).
-**Acceptance:** It builds for every year; it loads and syncs in at least the oldest and newest Revit installed
-in the office; the unit conversion has unit tests against hand-checked element volumes; a save is not slowed
+**Acceptance:** It builds for every year; the BIM technician confirms it loads and syncs in at least the oldest and
+newest Revit installed in the office, returning a snapshot JSON and a schedule CSV whose totals an automated test
+matches; the unit conversion has unit tests against hand-checked element volumes; a save is not slowed
 down measurably.
 **Notes:** A snapshot identifies its model by its ACC project id and model id (cloud models have no file path).
 Confirm the 2027 runtime against Autodesk's 2027 SDK. Element tagging waits for F-002. The upload target
