@@ -70,7 +70,12 @@ Revit 2022–2027 + this add-in --> outbox folder --> uploader --(snapshot, Entr
 |---|---|---|
 | 2022, 2023, 2024 | .NET Framework 4.8 | `net48` |
 | 2025, 2026 | .NET 8 | `net8.0-windows` |
-| 2027 | expected .NET 10: confirm against Autodesk's 2027 SDK before relying on it | `net10.0-windows` |
+| 2027 | .NET 10 (confirmed by Autodesk's 2027 SDK, April 2026) | `net10.0-windows` |
+
+**Start with two years: Revit 2026 and Revit 2024** (engineer, 2026-11-25: "start with the latest models"), the
+newest the office uses on each runtime. Add other years when a live project needs them; build 2027 once the office
+has it. Revit 2025 and 2026 may move to .NET 10 by update; keep building them for .NET 8 (which loads on .NET 10)
+and have the technician note Revit's exact build in every check.
 
 - One csproj with one build configuration per Revit year (R22 … R27), each referencing that year's
   Revit API. One `.addin` manifest per year, installed to `%AppData%\Autodesk\Revit\Addins\<year>\`.
@@ -91,8 +96,12 @@ Revit 2022–2027 + this add-in --> outbox folder --> uploader --(snapshot, Entr
 
 ## What a snapshot carries
 
-- **Snapshot:** time, who synced, Revit version, the model's ACC project id and model id.
-- **Element row:** element id, category, family/type, level, material, volume (m³), area (m²), count, and
+- **Snapshot:** a snapshot id made by the add-in, UTC time, who synced, add-in version, Revit's exact build,
+  whether the model is shared, which trigger fired, the model's ACC project id and model id.
+- **Facts only** (engineer, 2026-11-25): the add-in sends category, family, type, level, material and the raw
+  value of each named parameter. It never classifies (retaining or shear wall, which division): the website holds
+  those rules per project. One row per element and material; area is optional (beams and columns have none).
+- **Element row:** Revit's `UniqueId` (the key) and element id (64-bit, for display), category, family/type, level, material, volume (m³), area (m²), count, and
   the tags below.
 
 Rows are per element and never pre-aggregated: the website filters any combination of tags (for example
@@ -127,6 +136,10 @@ So each row needs:
 structural categories (a stable GUID across projects and Revit versions; suggested, not decided), how element
 kind and pile type are marked, and whether division can default from a per-project level mapping with the
 parameter as an override. The add-in reports elements whose parameter is blank; it never guesses a value.
+The BIM technician's first job is a one-off **raw dump** of a real tower (F-004): every structural element with
+its category, family, type, levels, materials with volumes, and every parameter name and value. It answers most of
+F-002 by evidence. Until then pick no parameter names; once named, they are a setting the add-in reads, bound as
+shared parameters.
 
 **Not only concrete** (engineer, 2026-11-25). Every structural element is sent whatever its material: steel and
 other materials are quantified, costed and given carbon on the website (mass = volume × a density typed in on
@@ -153,4 +166,6 @@ docs/            backlog-archive.md
   debt, never reused). This repo's IDs are its own; the website repo has a separate list.
 - **AGENTS.md** mirrors this file for Codex. Apply every edit to both.
 - Remote: https://github.com/AdnanAlmulla/RevitVolumeCostAddin (private).
+- **Claude commits, never pushes** (engineer, 2026-11-25): the engineer pushes when he chooses. Contributors
+  still follow `CONTRIBUTING.md`.
 - Author: Adnan Almulla @ Killa Design.

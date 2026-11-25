@@ -17,7 +17,19 @@ Revit technician's job, so there are no items for it.
 
 ## Active
 
-### [F-001] P1 — One Revit add-in building for Revit 2022 to 2027
+### [F-004] P1 — Raw dump of a real tower (the technician's first job)
+<!-- type: feature | added: 2026-11-25 -->
+**What:** A one-off dump command for Revit 2026. It writes one file: every structural element of the host model
+with its `UniqueId`, element id, category, family, type, levels, materials with volumes, and every parameter name
+and value. The BIM technician runs it once on a real tower and also exports Revit's quantity schedule as CSV.
+**Why:** It shows which parameters exist and what they are called, how many elements a tower has, how long reading
+them takes, and whether material names carry the grade, before any rule or snapshot class is fixed.
+**Where:** `_harnesses/` or `src/Addin/`; the file comes back to the engineer.
+**Acceptance:** The dump and the CSV are in hand; F-002's open points are answered from them; snapshot classes v1
+are written from them.
+**Notes:** Adopted from the plan review (engineer, 2026-11-25).
+
+### [F-001] P1 — One Revit add-in, Revit 2024 and 2026 first, then 2022 to 2027
 <!-- type: feature | added: 2026-11-25 -->
 **What:** The add-in project: one csproj with configurations R22 … R27 (`net48`, `net8.0-windows`, expected
 `net10.0-windows` for 2027), one `.addin` manifest per year, and `src/Contracts` (`netstandard2.0`). It reads
@@ -27,7 +39,7 @@ third-party files. A small separate uploader, built once, signs in with its own 
 retrying until each file lands. WPF UI. Every structural material is read, not only concrete.
 **Why:** The add-in is the website's only source of data.
 **Where:** `src/Addin/`, `src/Contracts/`, `tests/` (planned layout in `CLAUDE.md`).
-**Acceptance:** It builds for every year; the BIM technician confirms it loads and syncs in at least the oldest and
+**Acceptance:** It builds for Revit 2024 and 2026 first, other years as projects need them; the BIM technician confirms it loads and syncs in at least the oldest and
 newest Revit installed in the office, returning a snapshot JSON and a schedule CSV whose totals an automated test
 matches; the unit conversion has unit tests against hand-checked element volumes; a sync is not slowed
 down measurably.
@@ -47,7 +59,7 @@ Also since 2026-11-25: **RC or PT** is another instance parameter, read like div
 Open: their names; shared project parameters bound to the structural categories (suggested, not decided);
 how element kind and pile type are marked; a per-project level-to-division default with the parameter as an
 override (suggested, not decided).
-**Where:** The engineer, with the BIM technician.
+**Where:** The engineer, with the BIM technician; the raw dump (F-004) answers most of it.
 **Acceptance:** The convention is written into `CLAUDE.md`, and the add-in's tagging follows it.
 **Notes:** Moved here from the website repo's F-002 on 2026-11-25.
 
