@@ -28,8 +28,10 @@ Status (2026-11-25): **v0.1 planning.** No code yet.
 
 ## How work lands here
 
-- **Every change arrives as a pull request into `master`, and the engineer (Adnan Almulla) reviews and
-  merges it.** Nobody pushes to `master` directly. See `CONTRIBUTING.md`.
+- **Every contributor's change arrives as a pull request into `master`, and the engineer (Adnan Almulla)
+  reviews and merges it.** Contributors never push to `master`; the branch rule requires his approval, and
+  only he, as owner, can bypass it (GitHub won't let an author approve their own pull request). See
+  `CONTRIBUTING.md`.
 - **`src/Contracts` is shared with the website.** The website repo builds against a clone of this repo
   placed beside it, so a change to a snapshot class changes what the API receives. Keep changes additive
   (new optional fields); renaming or removing a field needs the engineer's say-so in the pull request.
