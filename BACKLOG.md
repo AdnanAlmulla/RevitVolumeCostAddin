@@ -41,7 +41,7 @@ podium, tower; set per project), RC or PT, element kind (retaining vs shear wall
 diameter and concrete grade. See the reference table in `CLAUDE.md` "What a snapshot carries".
 **Why:** Every filter on the website beyond category depends on these tags.
 **Notes (2026-11-25):** The engineer has ruled that division and concrete grade are **instance parameters**.
-Also needed since 2026-11-25: an **RC or PT** tag on every element (proposed: an instance parameter like the others).
+Also since 2026-11-25: **RC or PT** is another instance parameter, read like division and grade.
 Open: their names; shared project parameters bound to the structural categories (suggested, not decided);
 how element kind and pile type are marked; a per-project level-to-division default with the parameter as an
 override (suggested, not decided).

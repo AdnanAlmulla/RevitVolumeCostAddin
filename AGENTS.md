@@ -106,8 +106,8 @@ So each row needs:
 - **Element kind**, finer than Revit's category: walls split into retaining and shear walls; structural
   foundations into piles, rafts and pile caps.
 - **Type / size** (pile diameter), **concrete grade** and a **count**.
-- **Structural system: RC or PT** (reinforced or post-tensioned concrete), required since 2026-11-25. Proposed:
-  an instance parameter like division and grade, the add-in reporting elements left blank.
+- **RC or PT**: another instance parameter like division and grade (engineer, 2026-11-25), read and sent as
+  one more tag; blanks reported.
 - The **material** as now; the website derives mass (volume × density) and embodied carbon from it.
 - Elements outside the table (stairs, ramps, upstands…) are still sent; the website files them under
   "Other / Misc".
