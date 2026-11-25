@@ -5,7 +5,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ## What this is
 
 **The Revit add-in of Revit Volume & Cost** (repo `RevitVolumeCostAddin`): a Revit add-in for Revit
-2022–2027 that reads the concrete quantities of a structural model and sends them, as a snapshot, to the
+2022–2027 that reads the quantities of a structural model (concrete, steel and other materials) and sends them, as a snapshot, to the
 project's internal website. It also holds the **snapshot classes** (`src/Contracts`) that the website's API
 compiles against.
 
@@ -45,17 +45,21 @@ Status (2026-11-25): **v0.1 planning.** No code yet.
 ## What the add-in does (engineer's rulings, 2026-11-25)
 
 ```
-Revit 2022–2027 + this add-in  --(snapshot, Entra token)-->  website API (other repo)
+Revit 2022–2027 + this add-in --> outbox folder --> uploader --(snapshot, Entra token)--> website API (other repo)
 ```
 
 - **It pushes snapshots.** There is no live link from the website to Revit. The add-in sends one row per
-  element of the **host model** (no linked models; structural models only) on Save, on Synchronize with
-  Central and on a manual Sync button.
-- **The upload never slows a save.** It runs in the background, and a failed upload is queued and retried.
+  element of the **host model** (no linked models; structural models only) after a successful Synchronize with
+  Central and on a manual Sync button, **not on Save** (engineer, 2026-11-25: on a shared ACC model a Save holds
+  one modeller's unfinished local copy). Ignore family files, models not on ACC and detached copies.
+- **The add-in writes, the uploader sends** (engineer, 2026-11-25). The add-in writes each snapshot to an outbox
+  folder on the PC and carries **no third-party files** (no library clash with other add-ins in the same Revit).
+  A small separate uploader program, built once for all Revit years, signs in and sends the outbox, retrying
+  until each file lands. Nothing slows a sync.
 - **Model identity:** the models are ACC cloud models with no file path, so a snapshot names its model by
   its **ACC project id and model id**, never by a path or file name.
-- **Sign-in:** Microsoft 365 (Entra ID). The add-in has its **own** small MSAL wrapper that gets a token
-  for the website API's upload scope. It does **not** use `KillaPluginAuthentication` (that belongs to the
+- **Sign-in:** Microsoft 365 (Entra ID), in the uploader only, never inside Revit. The uploader has its
+  **own** small MSAL wrapper that gets a token for the website API's upload scope. It does **not** use `KillaPluginAuthentication` (that belongs to the
   CSi plugins: "this is not a CSi plugin").
 - **No cost in the add-in.** Rates live on the website. The add-in sends quantities only.
 - **Our data never depends on a third-party service.** Autodesk's cloud may later serve a 3D viewer only.
@@ -124,9 +128,9 @@ structural categories (a stable GUID across projects and Revit versions; suggest
 kind and pile type are marked, and whether division can default from a per-project level mapping with the
 parameter as an override. The add-in reports elements whose parameter is blank; it never guesses a value.
 
-**Steel is an open question** (engineer, 2026-11-25: "We may have steel elements"). Whether the add-in sends steel
-quantities (mass) or only steel shapes for the 3D view is not decided (website backlog F-009). Ask before
-adding steel fields to `src/Contracts`.
+**Not only concrete** (engineer, 2026-11-25). Every structural element is sent whatever its material: steel and
+other materials are quantified, costed and given carbon on the website (mass = volume × a density typed in on
+the site). Still open (F-002): how a steel element's grade or section is marked. Ask before adding fields.
 
 Whether the volumes in the model are right (overlaps, joins) is the Revit technician's job, not the
 add-in's.

@@ -21,17 +21,18 @@ Revit technician's job, so there are no items for it.
 <!-- type: feature | added: 2026-11-25 -->
 **What:** The add-in project: one csproj with configurations R22 … R27 (`net48`, `net8.0-windows`, expected
 `net10.0-windows` for 2027), one `.addin` manifest per year, and `src/Contracts` (`netstandard2.0`). It reads
-one row per element of the host model, converts ft³ / ft² to m³ / m² in one place, and uploads a snapshot on
-Save, on Synchronize with Central and on a manual Sync, in the background, queued and retried on failure. Its
-own small MSAL wrapper gets the API token. WPF UI.
+one row per element of the host model, converts ft³ / ft² to m³ / m² in one place, and writes a snapshot to an
+outbox folder after a successful Synchronize with Central and on a manual Sync (not on Save). The add-in carries no
+third-party files. A small separate uploader, built once, signs in with its own MSAL wrapper and sends the outbox,
+retrying until each file lands. WPF UI. Every structural material is read, not only concrete.
 **Why:** The add-in is the website's only source of data.
 **Where:** `src/Addin/`, `src/Contracts/`, `tests/` (planned layout in `CLAUDE.md`).
 **Acceptance:** It builds for every year; the BIM technician confirms it loads and syncs in at least the oldest and
 newest Revit installed in the office, returning a snapshot JSON and a schedule CSV whose totals an automated test
-matches; the unit conversion has unit tests against hand-checked element volumes; a save is not slowed
+matches; the unit conversion has unit tests against hand-checked element volumes; a sync is not slowed
 down measurably.
 **Notes:** A snapshot identifies its model by its ACC project id and model id (cloud models have no file path).
-Confirm the 2027 runtime against Autodesk's 2027 SDK. Element tagging waits for F-002. The upload target
+Confirm the 2027 runtime against Autodesk's 2027 SDK. Element tagging waits for F-002. The uploader's target
 needs the website's API and Entra registration (website repo); until then, test against a local stub.
 Moved here from the website repo's F-003 on 2026-11-25.
 
@@ -54,7 +55,7 @@ override (suggested, not decided).
 <!-- type: feature | added: 2026-11-25 -->
 **What:** For the website's 3D viewer (decided 2026-11-25: three.js on the site), the add-in will export per-element shapes keyed by Revit
 element id. First step only: time that export on the largest tower model.
-**Why:** The export must not slow down a Save. The viewer approach is decided; only its timing is open.
+**Why:** The export must not slow down a Synchronize with Central. The viewer approach is decided; only its timing is open.
 **Where:** A timing probe under `_harnesses/`.
 **Acceptance:** The export time on the largest tower is measured and put to the engineer.
 **Notes:** Deferred by the engineer (2026-11-25). The viewer side is the website repo's F-006.
