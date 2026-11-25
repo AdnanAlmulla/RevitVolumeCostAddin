@@ -124,6 +124,10 @@ structural categories (a stable GUID across projects and Revit versions; suggest
 kind and pile type are marked, and whether division can default from a per-project level mapping with the
 parameter as an override. The add-in reports elements whose parameter is blank; it never guesses a value.
 
+**Steel is an open question** (engineer, 2026-11-25: "We may have steel elements"). Whether the add-in sends steel
+quantities (mass) or only steel shapes for the 3D view is not decided (website backlog F-009). Ask before
+adding steel fields to `src/Contracts`.
+
 Whether the volumes in the model are right (overlaps, joins) is the Revit technician's job, not the
 add-in's.
 

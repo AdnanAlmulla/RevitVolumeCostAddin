@@ -58,5 +58,7 @@ element id. First step only: time that export on the largest tower model.
 **Where:** A timing probe under `_harnesses/`.
 **Acceptance:** The export time on the largest tower is measured and put to the engineer.
 **Notes:** Deferred by the engineer (2026-11-25). The viewer side is the website repo's F-006.
+The viewer shows the whole structural model (concrete highlighted, the rest grey), so the export covers every
+structural element, steel included (engineer, 2026-11-25).
 
 ## Done
