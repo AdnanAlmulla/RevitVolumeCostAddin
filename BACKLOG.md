@@ -37,10 +37,11 @@ Moved here from the website repo's F-003 on 2026-11-25.
 ### [F-002] P1 — Division, element-kind and concrete-grade conventions
 <!-- type: feature | added: 2026-11-25 -->
 **What:** Find out how the structural models mark the divisions (piles, foundation, basement, ground floor,
-podium, tower; set per project), element kind (retaining vs shear wall; pile vs raft vs pile cap), pile type /
+podium, tower; set per project), RC or PT, element kind (retaining vs shear wall; pile vs raft vs pile cap), pile type /
 diameter and concrete grade. See the reference table in `CLAUDE.md` "What a snapshot carries".
 **Why:** Every filter on the website beyond category depends on these tags.
 **Notes (2026-11-25):** The engineer has ruled that division and concrete grade are **instance parameters**.
+Also needed since 2026-11-25: an **RC or PT** tag on every element (proposed: an instance parameter like the others).
 Open: their names; shared project parameters bound to the structural categories (suggested, not decided);
 how element kind and pile type are marked; a per-project level-to-division default with the parameter as an
 override (suggested, not decided).
