@@ -33,10 +33,10 @@ the shared-components inventory and the plugin release tool. These **do** apply:
 (units in names, named and cited constants, one step per line), xUnit tests that compile pure source in by
 path, and the `BACKLOG.md` convention.
 
-Status (2026-11-26): **phase 1 and 4 code built, not yet run in Revit.** The raw dump (F-004) ran on a real tower
-and matched Revit's takeoff. Version 0.2.0 adds snapshot classes v1 (`src/Contracts`), the ribbon tab (Sync to
-website, Raw dump), the snapshot after each Synchronize with Central, the outbox and the uploader (`src/Uploader`).
-Its hand-off (`docs/technician/sync-instructions.md`) is the first snapshot test on the same detached copy.
+Status (2026-11-26): **version 0.2.0 has run in Revit.** The technician's Sync to website on a real tower (Revit
+2026.5, 6,002 elements) read in 10.9 s the first time and 3.7 s the second, none unreadable, and its volume per
+material equals the raw dump's exactly. The snapshot after each Synchronize with Central is built but still switched
+off; switching it on is the engineer's call. The uploader is built and tested against a test site only.
 
 ## How work lands here
 

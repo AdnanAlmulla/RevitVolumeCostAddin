@@ -40,8 +40,10 @@ address is a per-PC setting.
 **Progress (2026-11-26, v0.2.0):** Snapshot classes v1 (`src/Contracts`, facts only), the ribbon tab (Sync to website,
 Raw dump), the snapshot after each successful Synchronize with Central of a cloud model (read-only, logged and
 timed; switched off per PC until the manual snapshot's time is known; it does not yet skip non-structural models), the outbox (`%LocalAppData%\<product>\Outbox`) and the uploader (`src/Uploader`: Sent / Rejected / retry,
-checked end to end against a test site). Not yet run in Revit: the technician's first snapshot test
-(`docs/technician/sync-instructions.md`) is next; its per-material volumes must equal the raw dump's (68,802.0 m³).
+checked end to end against a test site). **First run in Revit (2026-11-26):** Sync to website on a real tower read
+6,002 elements in 10.9 s (first) and 3.7 s (second), none unreadable; per-material volumes equal the raw dump's on
+all 11 materials (68,802.0 m³). Still to run: the snapshot after Synchronize with Central (switched off until the
+engineer says), the uploader on a modeller's PC, Revit 2024.
 Automatic upload from modellers' PCs waits for the site to be opened to the network and for sign-in (website T-006,
 T-004).
 **Progress (2026-11-26, v0.1):** The project exists with configurations R24 and R26, the product-name property, the
