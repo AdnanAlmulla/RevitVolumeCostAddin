@@ -6,14 +6,15 @@ using System.Text.RegularExpressions;
 namespace Addin
 {
     /// <summary>
-    /// Per-PC switches, in %AppData%\&lt;product&gt;\addin.json. The snapshot after Synchronize with Central is OFF until
-    /// that file says <c>"snapshotAfterSync": true</c>: it holds Revit for the whole read after every sync of every
-    /// cloud model, and its time is not measured yet (engineer's first snapshot test, 2026-11-26). A missing or
-    /// unreadable file means off. No JSON library: the add-in carries no third-party files.
+    /// Per-PC switches, in %AppData%\&lt;product&gt;\addin.json. The snapshot after Synchronize with Central is ON unless
+    /// that file says <c>"snapshotAfterSync": false</c> (engineer, 2026-11-26: "Let us do the automatic snapshot after
+    /// every synchronize with central. Those added seconds are fine"; the first real read took 3.7 to 10.9 s for a
+    /// 6,000-element tower). A missing or unreadable file means on. No JSON library: the add-in carries no
+    /// third-party files.
     /// </summary>
     public static class AddinSettings
     {
-        private static readonly Regex SNAPSHOT_AFTER_SYNC_ON = new Regex("\"snapshotAfterSync\"\\s*:\\s*true", RegexOptions.IgnoreCase);
+        private static readonly Regex SNAPSHOT_AFTER_SYNC_OFF = new Regex("\"snapshotAfterSync\"\\s*:\\s*false", RegexOptions.IgnoreCase);
 
         public static string PathFor(string productName)
         {
@@ -23,7 +24,7 @@ namespace Addin
 
         public static bool IsSnapshotAfterSyncOn(string? settingsText)
         {
-            return settingsText != null && SNAPSHOT_AFTER_SYNC_ON.IsMatch(settingsText);
+            return settingsText == null || !SNAPSHOT_AFTER_SYNC_OFF.IsMatch(settingsText);
         }
 
         public static bool IsSnapshotAfterSyncOn(string productName, Func<string, string?> readFile)
@@ -34,7 +35,7 @@ namespace Addin
             }
             catch (Exception)
             {
-                return false;
+                return true;
             }
         }
     }

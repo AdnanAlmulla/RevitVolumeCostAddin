@@ -10,10 +10,11 @@ using Contracts;
 namespace Addin
 {
     /// <summary>
-    /// Starts with Revit: adds the ribbon tab (Sync to website, Raw dump) and, when switched on for this PC
-    /// (AddinSettings), takes a snapshot after every successful Synchronize with Central (not on Save: CLAUDE.md "It
-    /// pushes snapshots"). That snapshot can't fail the sync: it runs after Revit has finished, only reads, shows
-    /// nothing, and a failure is only logged. It does hold Revit while it reads, which is why it starts switched off.
+    /// Starts with Revit: adds the ribbon tab (Sync to website, Raw dump) and takes a snapshot after every successful
+    /// Synchronize with Central (not on Save: CLAUDE.md "It pushes snapshots"), unless this PC switches it off
+    /// (AddinSettings). That snapshot can't fail the sync: it runs after Revit has finished, only reads, shows nothing,
+    /// and a failure is only logged. It holds Revit while it reads: 3.7 to 10.9 s on a 6,000-element tower, which the
+    /// engineer accepted (2026-11-26).
     /// </summary>
     public sealed class App : IExternalApplication
     {

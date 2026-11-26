@@ -35,8 +35,8 @@ path, and the `BACKLOG.md` convention.
 
 Status (2026-11-26): **version 0.2.0 has run in Revit.** The technician's Sync to website on a real tower (Revit
 2026.5, 6,002 elements) read in 10.9 s the first time and 3.7 s the second, none unreadable, and its volume per
-material equals the raw dump's exactly. The snapshot after each Synchronize with Central is built but still switched
-off; switching it on is the engineer's call. The uploader is built and tested against a test site only.
+material equals the raw dump's exactly. Version 0.3.0 takes the snapshot after every Synchronize with Central by
+default (engineer, 2026-11-26). The uploader is built and tested against a test site only.
 
 ## How work lands here
 
@@ -194,11 +194,12 @@ _harnesses/           throwaway probes, never part of a build
   (Revit 2024 can refuse a marked DLL), refuses while Revit is open, and never runs the add-in from a network share (the ETABS crash of 2026-11-23).
 - **Snapshots** go to `%LocalAppData%\<product>\Outbox\` (outside OneDrive), written under a temporary name and
   renamed when complete. The add-in logs each one, with its read time, to `%LocalAppData%\<product>\Logs\addin.log`.
-  The snapshot after Synchronize with Central is **off unless switched on per PC** (`%AppData%\<product>\addin.json`,
-  `"snapshotAfterSync": true`; `AddinSettings`): it holds Revit for its read after every sync of every cloud model,
-  and that time is unmeasured until the first snapshot test. When on, it skips family files, detached copies and
-  models not in ACC, never shows a dialog and can't fail the sync; it does not yet tell structural models from
-  others. The Sync button works on any project model.
+  The snapshot after Synchronize with Central is **on by default** (engineer, 2026-11-26: "Let us do the automatic
+  snapshot after every synchronize with central. Those added seconds are fine"); a PC switches it off with
+  `%AppData%\<product>\addin.json` = `{ "snapshotAfterSync": false }` (`AddinSettings`). It holds Revit for its read
+  (3.7 to 10.9 s on a 6,000-element tower), skips family files, detached copies and models not in ACC, never shows a
+  dialog and can't fail the sync. It does not tell structural models from others, so the add-in goes only on
+  structural modellers' PCs. The Sync button works on any project model.
 - **The uploader** reads the site's address from `%AppData%\<product>\uploader.json` (a per-PC setting, never
   committed), posts each snapshot oldest first, moves it to `Sent` or (refused) `Rejected` with the reason, and
   retries anything else every minute. No sign-in yet (deferred); the site takes uploads only from its own PC until

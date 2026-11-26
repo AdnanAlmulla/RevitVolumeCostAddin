@@ -11,7 +11,7 @@ $ErrorActionPreference = 'Stop'
 $repositoryFolder = $PSScriptRoot
 $addinProject = Join-Path $repositoryFolder 'src\Addin\Addin.csproj'
 $testProject = Join-Path $repositoryFolder 'tests\Addin.Tests\Addin.Tests.csproj'
-# The sheet for the current hand-off (v0.2: the first snapshot test; v0.1 was raw-dump-instructions.md).
+# The sheet for the current hand-off (v0.3: automatic snapshot after sync; v0.1 was raw-dump-instructions.md).
 $instructionSheet = Join-Path $repositoryFolder 'docs\technician\sync-instructions.md'
 
 # Revit year built by each build configuration (src/Addin/Addin.csproj).

@@ -3,27 +3,27 @@ using Xunit;
 
 namespace Addin.Tests
 {
-    /// <summary>The snapshot after Synchronize with Central stays off unless this PC's settings switch it on.</summary>
+    /// <summary>The snapshot after Synchronize with Central is on unless this PC's settings switch it off.</summary>
     public class AddinSettingsTests
     {
         [Theory]
-        [InlineData("{ \"snapshotAfterSync\": true }", true)]
-        [InlineData("{\"snapshotAfterSync\":true}", true)]
         [InlineData("{ \"snapshotAfterSync\": false }", false)]
-        [InlineData("{ }", false)]
-        [InlineData("not json at all", false)]
-        [InlineData(null, false)]
-        public void Only_an_explicit_true_switches_it_on(string? settingsText, bool expected)
+        [InlineData("{\"snapshotAfterSync\":false}", false)]
+        [InlineData("{ \"snapshotAfterSync\": true }", true)]
+        [InlineData("{ }", true)]
+        [InlineData("not json at all", true)]
+        [InlineData(null, true)]
+        public void Only_an_explicit_false_switches_it_off(string? settingsText, bool expected)
         {
             Assert.Equal(expected, AddinSettings.IsSnapshotAfterSyncOn(settingsText));
         }
 
         [Fact]
-        public void A_settings_file_that_cannot_be_read_means_off()
+        public void A_settings_file_that_cannot_be_read_leaves_it_on()
         {
             bool isOn = AddinSettings.IsSnapshotAfterSyncOn("Product", path => throw new System.IO.IOException("locked"));
 
-            Assert.False(isOn);
+            Assert.True(isOn);
         }
     }
 }
