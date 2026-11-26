@@ -59,11 +59,20 @@ column and slab volumes. Still to do: `src/Contracts`, the snapshot, the Sync tr
 **What:** For the website's 3D viewer (decided 2026-11-25: three.js on the site), the add-in will export per-element shapes keyed by Revit
 element id. First step only: time that export on the largest tower model.
 **Why:** The export must not slow down a Synchronize with Central. The viewer approach is decided; only its timing is open.
-**Where:** A timing probe under `_harnesses/`.
+**Where:** `src/Addin/Commands/ShapeExportCommand.cs` and `src/Addin/Shapes/` (a "3D shapes" button: the technician
+runs it, so it ships in the add-in rather than under `_harnesses/`).
 **Acceptance:** The export time on the largest tower is measured and put to the engineer.
 **Notes:** Deferred by the engineer (2026-11-25). The viewer side is the website repo's F-006.
 The viewer shows the whole structural model (concrete highlighted, the rest grey), so the export covers every
 structural element, steel included (engineer, 2026-11-25).
+**Progress (2026-11-26, v0.5.0):** Started at the engineer's word ("We can proceed with the 3D view"). The button reads
+the shapes of the elements a snapshot holds, twice: Medium detail with the coarsest triangles, written to
+`Documents\<product>\Shapes\*.shapes.json.gz` (format "shapes-1": element id, UniqueId, category, corners in whole mm,
+triangles; provisional, kept out of `src/Contracts`), then Fine detail with finer triangles, counted only. It logs
+the time spent asking Revit for geometry, cutting faces into triangles and writing, per pass, with counts per
+category (elements with no shape, triangles), to `addin.log`, and progress every 1,000 elements. Not run in Revit
+yet; not part of a sync (the engineer rules on that with the times). Sheet: `docs/technician/sync-instructions.md`
+section 3.
 
 ## Done
 

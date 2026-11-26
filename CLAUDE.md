@@ -38,7 +38,8 @@ Status (2026-11-26): **version 0.2.0 has run in Revit.** The technician's Sync t
 material equals the raw dump's exactly. Version 0.3.0 takes the snapshot after every Synchronize with Central by
 default (engineer, 2026-11-26). Version 0.4.0 ships the uploader in the hand-off package: installed by `Install.cmd`,
 started at Windows sign-in, sending to the website on the office network with its site password (checked against a
-test copy of the site; not yet on a modeller's PC).
+test copy of the site; not yet on a modeller's PC). Version 0.5.0 adds the **3D shapes** button, the timing probe for
+the website's 3D view (F-003); its first run on the largest tower is the technician's next step.
 
 ## How work lands here
 
@@ -168,7 +169,8 @@ add-in's.
 ```
 src/Addin/            Revit add-in, configurations R24 and R26 (others when needed)
   App.cs              starts with Revit: the ribbon tab, and the snapshot after each Synchronize with Central
-  Commands/           SyncCommand (Sync to website), RawDumpCommand; both read-only
+  Commands/           SyncCommand (Sync to website), RawDumpCommand, ShapeExportCommand (3D shapes); all read-only
+  Shapes/             ShapeReader (Revit); ShapeMesh and ShapeFile (pure, tested): the "shapes-1" file for the 3D view
   Snapshots/          SnapshotReader (Revit), SnapshotJson and SnapshotOutbox (pure, tested)
   RawDump/            RawDumpWriter: the F-004 dump, format "raw-dump-1"
   Json/, Units/       pure code (no Revit API), compiled into the tests by path

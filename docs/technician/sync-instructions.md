@@ -1,8 +1,10 @@
-# Add-in 0.4: instructions for the BIM technicians
+# Add-in 0.5: instructions for the BIM technicians
 
-**What changes.** The snapshots now **reach the website by themselves**. A small program, the **uploader**, is
-installed with the add-in: it starts when you sign in to Windows, has no window, and sends each new snapshot to the
-website within a minute. If the website can't be reached, it keeps trying.
+**New in 0.5:** a **3D shapes** button, to run once on the largest tower (section 3).
+
+**New in 0.4:** the snapshots **reach the website by themselves**. A small program, the **uploader**, is installed
+with the add-in: it starts when you sign in to Windows, has no window, and sends each new snapshot to the website
+within a minute. If the website can't be reached, it keeps trying.
 
 As in 0.3, the add-in takes a snapshot of the model's quantities **by itself after every successful Synchronize with
 Central** on a cloud (ACC) model. Nothing pops up. Revit is busy for a few seconds after each sync while it reads
@@ -31,7 +33,22 @@ Synchronize with Central as you always do. After each sync a file ending in **.s
 `%LocalAppData%\RevitVolumeCost\Outbox`, and within a minute the uploader moves it to the **Sent** folder beside it.
 Files that stay in the Outbox have not reached the website yet.
 
-## 3. If something seems wrong
+## 3. Once: 3D shapes on the largest tower (10 minutes)
+
+The website will show the model in 3D. Before that, we need to know how long Revit takes to read every element's
+shape. Adnan tells you which model is the largest tower.
+
+1. Open that model (in its own Revit year) and wait until it has fully opened.
+2. On the **RevitVolumeCost** tab, click **3D shapes**. **Revit will look frozen** while it reads, perhaps for a few
+   minutes: leave it. It changes nothing in the model.
+3. When the "3D shapes finished" box appears, note the seconds it shows, click OK, and click **3D shapes** a
+   second time (the second run is usually faster).
+4. Send Adnan the two files ending in **.shapes.json.gz** from `Documents\RevitVolumeCost\Shapes`, and
+   `%LocalAppData%\RevitVolumeCost\Logs\addin.log`.
+
+If Revit stops responding for more than 20 minutes, or closes, send `addin.log` anyway: it records how far it got.
+
+## 4. If something seems wrong
 
 - **Files stay in the Outbox:** open `%LocalAppData%\RevitVolumeCost\Logs\uploader.log`. "will retry ... 403" means
   the site password is wrong: correct it in `%AppData%\RevitVolumeCost\uploader.json` (Notepad), and the uploader

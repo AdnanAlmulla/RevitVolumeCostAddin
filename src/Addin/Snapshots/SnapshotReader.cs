@@ -68,10 +68,7 @@ namespace Addin.Snapshots
             }
 
             var usedTypeIds = new Dictionary<long, ElementId>();
-            IEnumerable<Element> modelElements = new FilteredElementCollector(document)
-                .WhereElementIsNotElementType()
-                .Where(IsModelElement);
-            foreach (Element element in modelElements)
+            foreach (Element element in ModelElements(document))
             {
                 try
                 {
@@ -111,7 +108,21 @@ namespace Addin.Snapshots
             return snapshot;
         }
 
-        private static ModelIdentity ModelIdentityOf(Document document)
+        /// <summary>The elements a snapshot reads (the 3D shape export reads the same ones).</summary>
+        internal static IEnumerable<Element> ModelElements(Document document)
+        {
+            return new FilteredElementCollector(document)
+                .WhereElementIsNotElementType()
+                .Where(IsModelElement);
+        }
+
+        /// <summary>Whether the element has any material volume: a snapshot keeps only those (see ReadElement).</summary>
+        internal static bool HasMaterialVolume(Element element)
+        {
+            return element.GetMaterialIds(false).Any(materialId => element.GetMaterialVolume(materialId) > 0);
+        }
+
+        internal static ModelIdentity ModelIdentityOf(Document document)
         {
             var identity = new ModelIdentity
             {

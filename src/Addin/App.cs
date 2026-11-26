@@ -44,6 +44,10 @@ namespace Addin
             {
                 ToolTip = "Writes every element with all its parameters to one file, for checking. Changes nothing in the model.",
             });
+            panel.AddItem(new PushButtonData("ShapeExport", "3D\nshapes", AddinInfo.AssemblyPath, typeof(ShapeExportCommand).FullName)
+            {
+                ToolTip = "Writes the 3D shape of every element to one file and times it, for the website's 3D view. Changes nothing in the model.",
+            });
         }
 
         /// <summary>
