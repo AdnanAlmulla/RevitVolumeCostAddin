@@ -179,8 +179,8 @@ _harnesses/           throwaway probes, never part of a build
 - **The hand-off package** (`powershell -ExecutionPolicy Bypass -File .\Build-Package.ps1`): tests, then
   `artifacts\<product>-<version>\` and its `.zip`, holding one folder per Revit year (`<product>.addin` +
   `<product>\<product>.dll`), `Install.cmd` and the instruction sheet. The installer copies each year's files
-  to `%AppData%\Autodesk\Revit\Addins\<year>\` for each Revit installed, refuses while Revit is open, and
-  never runs the add-in from a network share (the ETABS crash of 2026-11-23).
+  to `%AppData%\Autodesk\Revit\Addins\<year>\` for each Revit installed, removes Windows' "downloaded" mark
+  (Revit 2024 can refuse a marked DLL), refuses while Revit is open, and never runs the add-in from a network share (the ETABS crash of 2026-11-23).
 - The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.
 - A cloud model can't be opened in a newer Revit without upgrading it for everyone, so a Revit step always
   runs in the model's own Revit year; the instruction sheets say so.

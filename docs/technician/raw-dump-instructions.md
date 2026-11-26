@@ -13,7 +13,8 @@ be upgraded, **stop and cancel**: that is the wrong Revit year, and upgrading a 
 
 1. Close every Revit window.
 2. Unzip this package to a folder on your own PC (for example your Desktop), not on a network drive.
-3. Double-click **Install.cmd**. It installs for each of Revit 2024 and 2026 that your PC has, and says so.
+3. Double-click **Install.cmd**. If Windows warns about a downloaded file, choose **More info** > **Run anyway**.
+   It installs for each of Revit 2024 and 2026 that your PC has, and says so.
 
 ## 2. Run the dump
 
@@ -34,7 +35,11 @@ In the same model:
    Tick **Grand totals**.
 4. **Formatting**: pick **Material: Volume**, choose **Calculate totals**, then **Field Format...**: untick
    **Use project settings**, set Units to **Cubic meters** and Rounding to **3 decimal places**.
-5. **File** > **Export** > **Reports** > **Schedule**. Keep the default settings and save the .txt file.
+5. With the schedule open on screen, **File** > **Export** > **Reports** > **Schedule**. Keep the default
+   settings and save the .txt file.
+
+These steps were written without Revit open. If a step looks different in your Revit, do the nearest thing,
+send whatever export you get, and say which step differed.
 
 You don't need to keep the schedule in the model: close the model **without saving** (or delete the
 schedule first) so nothing is added for anyone else.

@@ -60,7 +60,12 @@ foreach ($yearFolder in $yearFolders) {
             Remove-Item -Recurse -Force -Path $targetAddinFolder
         }
         Copy-Item -Recurse -Path $sourceAddinFolder -Destination $targetAddinFolder
-        Copy-Item -Force -Path $manifest.FullName -Destination (Join-Path $targetYearFolder $manifest.Name)
+        $targetManifest = Join-Path $targetYearFolder $manifest.Name
+        Copy-Item -Force -Path $manifest.FullName -Destination $targetManifest
+        # A package that arrived by Teams or email carries Windows' "downloaded from the internet" mark, and
+        # copying keeps it. Revit 2024 (.NET Framework) can refuse to load a marked DLL, so remove the mark.
+        Get-ChildItem -Recurse -File -Path $targetAddinFolder | Unblock-File
+        Unblock-File -Path $targetManifest
         Write-Host "Revit ${revitYear}: installed in $targetYearFolder" -ForegroundColor Green
     }
     $installedYearCount++

@@ -50,7 +50,8 @@ foreach ($configuration in $REVIT_YEAR_BY_CONFIGURATION.Keys) {
 
 Copy-Item (Join-Path $repositoryFolder 'installer\Install.cmd') $packageFolder
 Copy-Item (Join-Path $repositoryFolder 'installer\Install-Addin.ps1') $packageFolder
-Copy-Item $instructionSheet (Join-Path $packageFolder 'READ ME FIRST.md')
+# Shipped as .txt: many PCs have no program for .md files.
+Copy-Item $instructionSheet (Join-Path $packageFolder 'READ ME FIRST.txt')
 
 $zipPath = "$packageFolder.zip"
 if (Test-Path $zipPath) { Remove-Item -Force $zipPath }

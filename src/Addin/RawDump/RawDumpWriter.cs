@@ -49,6 +49,9 @@ namespace Addin.RawDump
         private readonly SortedDictionary<string, int> elementCountByCategory = new SortedDictionary<string, int>(StringComparer.Ordinal);
         private readonly List<KeyValuePair<long, string>> unreadableIdsWithErrors = new List<KeyValuePair<long, string>>();
 
+        // Single parameter values or element materials that could not be read; each is marked "error" in place.
+        private int unreadableValueCount;
+
         public RawDumpWriter(Document document, Application application, string addinVersion)
         {
             this.document = document;
@@ -314,21 +317,34 @@ namespace Addin.RawDump
             json.BeginArray();
             foreach (ElementId materialId in element.GetMaterialIds(false))
             {
-                var material = document.GetElement(materialId) as Material;
-                double volumeFt3 = element.GetMaterialVolume(materialId);
-                double volumeM3 = RevitInternalUnits.CubicFeetToCubicMetres(volumeFt3);
-                double areaFt2 = element.GetMaterialArea(materialId, false);
-                double areaM2 = RevitInternalUnits.SquareFeetToSquareMetres(areaFt2);
-                json.BeginObject();
-                json.Property("materialId", ElementIds.ValueOf(materialId));
-                json.Property("materialName", material?.Name);
-                json.Property("volumeFt3", volumeFt3);
-                json.Property("volumeM3", volumeM3);
-                json.Property("areaFt2", areaFt2);
-                json.Property("areaM2", areaM2);
-                json.EndObject();
+                WriteIsolated(json,
+                    buffer => WriteElementMaterial(buffer, element, materialId),
+                    (buffer, error) =>
+                    {
+                        buffer.BeginObject();
+                        buffer.Property("materialId", ElementIds.ValueOf(materialId));
+                        buffer.Property("error", error);
+                        buffer.EndObject();
+                    });
             }
             json.EndArray();
+        }
+
+        private void WriteElementMaterial(JsonWriter json, Element element, ElementId materialId)
+        {
+            var material = document.GetElement(materialId) as Material;
+            double volumeFt3 = element.GetMaterialVolume(materialId);
+            double volumeM3 = RevitInternalUnits.CubicFeetToCubicMetres(volumeFt3);
+            double areaFt2 = element.GetMaterialArea(materialId, false);
+            double areaM2 = RevitInternalUnits.SquareFeetToSquareMetres(areaFt2);
+            json.BeginObject();
+            json.Property("materialId", ElementIds.ValueOf(materialId));
+            json.Property("materialName", material?.Name);
+            json.Property("volumeFt3", volumeFt3);
+            json.Property("volumeM3", volumeM3);
+            json.Property("areaFt2", areaFt2);
+            json.Property("areaM2", areaM2);
+            json.EndObject();
         }
 
         private void WriteTypes(JsonWriter json)
@@ -375,12 +391,23 @@ namespace Addin.RawDump
                     firstParameterByDefinitionId[definitionId] = parameter;
                 }
 
-                json.BeginObject();
-                json.Property("definition", definitionId);
-                json.PropertyName("value");
-                WriteRawValue(json, parameter);
-                json.Property("display", parameter.AsValueString());
-                json.EndObject();
+                WriteIsolated(json,
+                    buffer =>
+                    {
+                        buffer.BeginObject();
+                        buffer.Property("definition", definitionId);
+                        buffer.PropertyName("value");
+                        WriteRawValue(buffer, parameter);
+                        buffer.Property("display", parameter.AsValueString());
+                        buffer.EndObject();
+                    },
+                    (buffer, error) =>
+                    {
+                        buffer.BeginObject();
+                        buffer.Property("definition", definitionId);
+                        buffer.Property("error", error);
+                        buffer.EndObject();
+                    });
             }
             json.EndArray();
         }
@@ -465,6 +492,7 @@ namespace Addin.RawDump
             json.BeginObject();
             json.Property("elementCount", elementCount);
             json.Property("unreadableCount", unreadableIdsWithErrors.Count);
+            json.Property("unreadableValueCount", unreadableValueCount);
             json.Property("typeCount", usedTypeIdsByValue.Count);
             json.Property("parameterDefinitionCount", firstParameterByDefinitionId.Count);
             json.Property("readTimeSeconds", readTimeSeconds);
@@ -489,6 +517,29 @@ namespace Addin.RawDump
         /// Writes one value into a buffer first, so anything Revit fails to read is listed under "unreadable"
         /// (with its id and the error) and the rest of the file stays valid JSON. Returns whether it was written.
         /// </summary>
+        /// <summary>
+        /// Writes one parameter value or one material of an element through a buffer, so a value Revit fails to
+        /// read is written in its place with its error, and the element's other values are kept.
+        /// </summary>
+        private void WriteIsolated(JsonWriter json, Action<JsonWriter> writeValue, Action<JsonWriter, string> writeFailure)
+        {
+            var buffer = new StringWriter();
+            try
+            {
+                writeValue(new JsonWriter(buffer));
+            }
+            catch (Exception exception)
+            {
+                unreadableValueCount++;
+                string error = exception.GetType().Name + ": " + exception.Message;
+                var failureBuffer = new StringWriter();
+                writeFailure(new JsonWriter(failureBuffer), error);
+                json.RawValue(failureBuffer.ToString());
+                return;
+            }
+            json.RawValue(buffer.ToString());
+        }
+
         private bool TryWriteBuffered(JsonWriter json, ElementId id, Action<JsonWriter> writeValue)
         {
             var buffer = new StringWriter();
