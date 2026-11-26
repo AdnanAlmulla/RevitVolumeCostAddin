@@ -28,6 +28,14 @@ them takes, and whether material names carry the grade, before any rule or snaps
 **Acceptance:** The dump and the CSV are in hand; F-002's open points are answered from them; snapshot classes v1
 are written from them.
 **Notes:** Adopted from the plan review (engineer, 2026-11-25).
+**Progress (2026-11-26):** Built for Revit 2024 and 2026 (a cloud model can't move to a newer Revit without an
+upgrade for everyone, so the dump runs in the model's own year): `src/Addin/Commands/RawDumpCommand.cs` and
+`src/Addin/RawDump/RawDumpWriter.cs`, format "raw-dump-1" (gzipped JSON in `Documents\<product>\Raw dumps\`),
+read-only transaction mode. The hand-off is `Build-Package.ps1`'s zip plus `docs/technician/raw-dump-instructions.md`,
+which also asks for a multi-category material takeoff (category, material, m³ to 3 places, count) exported as text.
+**Not yet run inside Revit**: Revit's unsigned add-in prompt needs a click, so the technician's run is the first.
+Next, when the files are back: summarise the parameter names and fill rates (F-002), compare the dump's per-category
+and per-material volumes with the takeoff, then write snapshot classes v1. Never commit the files (public repo).
 
 ### [F-001] P1 — One Revit add-in, Revit 2024 and 2026 first, then 2022 to 2027
 <!-- type: feature | added: 2026-11-25 -->
@@ -47,6 +55,10 @@ down measurably.
 Confirm the 2027 runtime against Autodesk's 2027 SDK. Element tagging waits for F-002. The uploader's target
 needs the website's API and Entra registration (website repo); until then, test against a local stub.
 Moved here from the website repo's F-003 on 2026-11-25.
+**Progress (2026-11-26):** The project exists with configurations R24 and R26, the product-name property, the
+build-time `.addin` manifest, the installer, CI (`.github/workflows/build.yml`, not yet run: nothing pushed) and the
+ft³ / ft² to m³ / m² conversion (`src/Addin/Units/RevitInternalUnits.cs`) with tests against hand-checked beam,
+column and slab volumes. Still to do: `src/Contracts`, the snapshot, the Sync triggers, the outbox, the uploader.
 
 ### [F-002] P1 — Division, element-kind and concrete-grade conventions
 <!-- type: feature | added: 2026-11-25 -->

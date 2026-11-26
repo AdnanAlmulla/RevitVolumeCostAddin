@@ -14,8 +14,11 @@ off on 2026-11-25 so that Revit-side contributors work here only (engineer's rul
 
 **The name is a placeholder** (engineer, 2026-11-25): "Revit Volume & Cost", `RevitVolumeCost` and
 `RevitVolumeCostAddin` are working names; the product's real name is not decided. Keep it cheap to rename:
-put the product name in one MSBuild property (`Directory.Build.props`) that assembly names and root
-namespaces derive from, and nowhere else in code.
+put the product name in one MSBuild property (`Directory.Build.props`, `ProductName`) and nowhere else in
+code. The assembly name, the add-in's folder and its `.addin` manifest (written at build time from
+`src/Addin/Manifest.addin.template`) derive from it, and the code reads it back from the assembly name. C#
+namespaces are written in source, so they stay neutral (`Addin.*`; `Contracts.*` when it exists) and never
+carry the name.
 
 **Who runs what in Revit** (engineer, 2026-11-25): the engineer does not open Revit. The BIM technician
 installs the add-in, fills the parameters, runs Export / Sync and does the per-release check. Every Revit step
@@ -30,7 +33,9 @@ the shared-components inventory and the plugin release tool. These **do** apply:
 (units in names, named and cited constants, one step per line), xUnit tests that compile pure source in by
 path, and the `BACKLOG.md` convention.
 
-Status (2026-11-25): **v0.1 planning.** No code yet.
+Status (2026-11-26): **phase 0 of the build plan.** The raw dump command (F-004) is built for Revit 2024 and
+2026 and its hand-off package is ready for the BIM technician; nothing has run inside Revit yet. No snapshot classes until the dump is
+back.
 
 ## How work lands here
 
@@ -148,17 +153,37 @@ the site). Still open (F-002): how a steel element's grade or section is marked.
 Whether the volumes in the model are right (overlaps, joins) is the Revit technician's job, not the
 add-in's.
 
-## Planned layout
-
-Nothing below exists yet except `docs/`. Create each part when its work starts.
+## Layout
 
 ```
-src/Contracts/   netstandard2.0 snapshot classes, also compiled by the website's API
-src/Addin/       Revit add-in (WPF), configurations R22–R27
-tests/           xUnit, pure source compiled in by path
-_harnesses/      throwaway probes, never part of a build
-docs/            backlog-archive.md
+src/Addin/            Revit add-in, configurations R24 and R26 (others when needed)
+  Commands/           RawDumpCommand (Add-Ins > External Tools), read-only
+  RawDump/            RawDumpWriter: the F-004 dump, format "raw-dump-1"
+  Json/, Units/       pure code (no Revit API), compiled into the tests by path
+  RevitApi/           ElementIds: the one place an ElementId becomes a number
+tests/Addin.Tests/    xUnit, pure source compiled in by path
+installer/            Install.cmd + Install-Addin.ps1, shipped in the hand-off package
+docs/technician/      the one-page instruction sheets that go to the BIM technician
+Build-Package.ps1     builds the hand-off package into artifacts/ (not committed)
+src/Contracts/        not yet: netstandard2.0 snapshot classes, written from the dump (F-004, F-001)
+_harnesses/           throwaway probes, never part of a build
 ```
+
+## Building
+
+- `dotnet build src/Addin/Addin.csproj -c R26` (or `-c R24`); `dotnet test tests/Addin.Tests/Addin.Tests.csproj`.
+  `global.json` pins the .NET 8 SDK. CI (`.github/workflows/build.yml`) runs the same three commands.
+- The Revit API comes from Nice3point's reference packages (`Nice3point.Revit.Api.RevitAPI`/`RevitAPIUI`),
+  **compile-time only** (`ExcludeAssets="runtime"`), so CI builds without Revit and nothing of theirs ships.
+  `Build-Package.ps1` refuses to package if any DLL but ours is in the build output.
+- **The hand-off package** (`powershell -ExecutionPolicy Bypass -File .\Build-Package.ps1`): tests, then
+  `artifacts\<product>-<version>\` and its `.zip`, holding one folder per Revit year (`<product>.addin` +
+  `<product>\<product>.dll`), `Install.cmd` and the instruction sheet. The installer copies each year's files
+  to `%AppData%\Autodesk\Revit\Addins\<year>\` for each Revit installed, refuses while Revit is open, and
+  never runs the add-in from a network share (the ETABS crash of 2026-11-23).
+- The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.
+- A cloud model can't be opened in a newer Revit without upgrading it for everyone, so a Revit step always
+  runs in the model's own Revit year; the instruction sheets say so.
 
 ## Working here
 
@@ -168,7 +193,9 @@ docs/            backlog-archive.md
 - Remote: https://github.com/AdnanAlmulla/RevitVolumeCostAddin (**public**, 2026-11-25).
 - **No licence** (engineer, 2026-11-25): the repo carries no open-source licence, so no one is granted the right
   to copy or reuse the code. Don't add a `LICENSE` file or licence text. Because it is public, never commit
-  secrets, tenant or client ids, internal paths or company cost data here.
+  secrets, tenant or client ids, internal paths or company cost data here. **Never commit a dump, snapshot or
+  schedule of a real model** either (the build plan's `samples/*.json` would be one): real model files stay on
+  the engineer's PC or in the private website repo.
 - **Claude commits, never pushes** (engineer, 2026-11-25): the engineer pushes when he chooses. Contributors
   still follow `CONTRIBUTING.md`.
 - Author: Adnan Almulla @ Killa Design.
