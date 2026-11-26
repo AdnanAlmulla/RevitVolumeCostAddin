@@ -207,7 +207,7 @@ _harnesses/           throwaway probes, never part of a build
   `X-Site-Password` header (the website's gate, 2026-11-26), moves it to `Sent` or (refused) `Rejected` with the reason,
   and retries anything else every minute, a refused password (401, 403) included: the setting is wrong, not the file.
   It is a windowless program (`WinExe`) logging to `%LocalAppData%\<product>\Logs\uploader.log`, one copy per user (a
-  named mutex). `Install.cmd` copies it to `%LocalAppData%\<product>\Uploader\`, asks the technician once for the
+  named mutex); a pass that fails (a mistyped setting) is logged and tried again. `Install.cmd` copies it to `%LocalAppData%\<product>\Uploader\`, asks the technician once for the
   address and password (Adnan gives them; never in the package), puts a shortcut in the user's Startup folder and
   starts it. It needs .NET 8 (Revit 2025 and 2026 install it); the installer says so when it is missing. Microsoft
   sign-in replaces the password later. **Not yet run on a modeller's PC**, and the installer's uploader steps were

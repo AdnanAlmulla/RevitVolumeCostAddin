@@ -46,26 +46,41 @@ Log($"Started. Sending {outboxFolder}. Settings: {settingsPath}");
 
 while (true)
 {
-    string siteAddress = ArgumentAfter("--site") ?? ReadSetting(settingsPath, "siteAddress") ?? DEFAULT_SITE_ADDRESS;
-    string? sitePassword = ReadSetting(settingsPath, "sitePassword");
-    string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
-    if (snapshotPaths.Length > 0)
+    // Nobody watches this program, so a pass that fails (a mistyped setting, a file still locked) is logged and the
+    // next pass tries again, never ending the program.
+    try
     {
-        using var http = new HttpClient { BaseAddress = new Uri(siteAddress), Timeout = uploadTimeout };
-        if (sitePassword != null)
-        {
-            http.DefaultRequestHeaders.Add(SITE_PASSWORD_HEADER, sitePassword);
-        }
-        foreach (string snapshotPath in snapshotPaths)
-        {
-            await SendAsync(http, snapshotPath);
-        }
+        await SendOutboxAsync();
+    }
+    catch (Exception exception)
+    {
+        Log($"pass failed, trying again in a minute: {exception.GetType().Name}: {exception.Message}");
     }
     if (isOnePass)
     {
         break;
     }
     await Task.Delay(timeBetweenPasses);
+}
+
+async Task SendOutboxAsync()
+{
+    string siteAddress = ArgumentAfter("--site") ?? ReadSetting(settingsPath, "siteAddress") ?? DEFAULT_SITE_ADDRESS;
+    string? sitePassword = ReadSetting(settingsPath, "sitePassword");
+    string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
+    if (snapshotPaths.Length == 0)
+    {
+        return;
+    }
+    using var http = new HttpClient { BaseAddress = new Uri(siteAddress), Timeout = uploadTimeout };
+    if (sitePassword != null)
+    {
+        http.DefaultRequestHeaders.Add(SITE_PASSWORD_HEADER, sitePassword);
+    }
+    foreach (string snapshotPath in snapshotPaths)
+    {
+        await SendAsync(http, snapshotPath);
+    }
 }
 
 async Task SendAsync(HttpClient client, string snapshotPath)

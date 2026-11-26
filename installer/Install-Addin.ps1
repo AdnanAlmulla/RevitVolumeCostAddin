@@ -113,6 +113,9 @@ elseif ($PSCmdlet.ShouldProcess($targetUploaderFolder, 'Install the uploader and
         Write-Host ''
         Write-Host 'The uploader needs the website address and the site password. Adnan gives you both.'
         $siteAddress = (Read-Host 'Website address (such as http://<computer name>:5080)').Trim().TrimEnd('/')
+        if ($siteAddress -notmatch '^https?://') {
+            $siteAddress = "http://$siteAddress"
+        }
         $securePassword = Read-Host 'Site password' -AsSecureString
         $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
         $sitePassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
