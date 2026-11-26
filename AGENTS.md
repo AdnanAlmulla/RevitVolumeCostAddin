@@ -65,7 +65,9 @@ Revit 2022–2027 + this add-in --> outbox folder --> uploader --(snapshot, Entr
   its **ACC project id and model id**, never by a path or file name.
 - **Sign-in:** Microsoft 365 (Entra ID), in the uploader only, never inside Revit. The uploader has its
   **own** small MSAL wrapper that gets a token for the website API's upload scope. It does **not** use `KillaPluginAuthentication` (that belongs to the
-  CSi plugins: "this is not a CSi plugin").
+  CSi plugins: "this is not a CSi plugin"). **Deferred** (engineer, 2026-11-26): the website runs on the engineer's
+  PC on the office network for now, with no Microsoft sign-in; until sign-in comes, the uploader sends to that
+  address without a token. Never commit that address here (public repo): it is a setting on each PC.
 - **No cost in the add-in.** Rates live on the website. The add-in sends quantities only.
 - **Our data never depends on a third-party service.** Autodesk's cloud may later serve a 3D viewer only.
 
