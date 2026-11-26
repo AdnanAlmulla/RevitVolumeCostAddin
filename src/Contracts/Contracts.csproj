@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The snapshot classes on their own, so CI checks they build for netstandard2.0. Neither the add-in nor the website
+    references this project: both compile the .cs files in by path, so the add-in still ships one DLL.
+  -->
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <AssemblyName>$(ProductName).Contracts</AssemblyName>
+    <RootNamespace>Contracts</RootNamespace>
+  </PropertyGroup>
+</Project>

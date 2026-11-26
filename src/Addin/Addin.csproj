@@ -47,6 +47,11 @@
     <None Remove="Manifest.addin.template" />
   </ItemGroup>
 
+  <ItemGroup>
+    <!-- The snapshot classes, compiled in from src/Contracts (not referenced), so the add-in still ships one DLL. -->
+    <Compile Include="..\Contracts\*.cs" Link="Contracts\%(Filename)%(Extension)" />
+  </ItemGroup>
+
   <!--
     Writes <ProductName>.addin beside the build output, from Manifest.addin.template, so the product name
     in the manifest comes from Directory.Build.props and from nowhere else.

@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    The uploader: a small program, one build for every Revit year, that sends the add-in's outbox to the website
+    (CLAUDE.md "The add-in writes, the uploader sends"). .NET 8, which Revit 2025 and 2026 install on every
+    modeller's PC. No third-party packages. Microsoft sign-in is deferred (engineer, 2026-11-26).
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <AssemblyName>$(ProductName).Uploader</AssemblyName>
+    <RootNamespace>Uploader</RootNamespace>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+</Project>

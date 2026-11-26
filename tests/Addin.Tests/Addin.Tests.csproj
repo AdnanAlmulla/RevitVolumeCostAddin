@@ -12,6 +12,11 @@
   <ItemGroup>
     <Compile Include="..\..\src\Addin\Units\RevitInternalUnits.cs" Link="Pure\RevitInternalUnits.cs" />
     <Compile Include="..\..\src\Addin\Json\JsonWriter.cs" Link="Pure\JsonWriter.cs" />
+    <Compile Include="..\..\src\Addin\Snapshots\SnapshotJson.cs" Link="Pure\SnapshotJson.cs" />
+    <Compile Include="..\..\src\Addin\Snapshots\SnapshotOutbox.cs" Link="Pure\SnapshotOutbox.cs" />
+    <Compile Include="..\..\src\Uploader\UploadRules.cs" Link="Pure\UploadRules.cs" />
+    <Compile Include="..\..\src\Addin\AddinSettings.cs" Link="Pure\AddinSettings.cs" />
+    <Compile Include="..\..\src\Contracts\*.cs" Link="Contracts\%(Filename)%(Extension)" />
   </ItemGroup>
 
   <ItemGroup>

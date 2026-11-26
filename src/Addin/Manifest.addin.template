@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Written at build time from src/Addin/Manifest.addin.template. The assembly path is relative to this file. -->
 <RevitAddIns>
-  <AddIn Type="Command">
-    <Name>$ProductName$ raw dump</Name>
-    <Text>$ProductName$: raw dump</Text>
-    <Description>Writes every model element of the open model, with its materials, volumes and every parameter, to one file. Changes nothing in the model.</Description>
+  <AddIn Type="Application">
+    <Name>$ProductName$</Name>
+    <Description>Adds a $ProductName$ tab (Sync to website, Raw dump) and takes a quantity snapshot after each Synchronize with Central. Only reads the model.</Description>
     <Assembly>$ProductName$\$ProductName$.dll</Assembly>
-    <FullClassName>Addin.Commands.RawDumpCommand</FullClassName>
+    <FullClassName>Addin.App</FullClassName>
     <AddInId>6f1d3a52-8c47-4b0e-9a61-2f7c5e3b9d14</AddInId>
-    <VisibilityMode>NotVisibleInFamily</VisibilityMode>
     <VendorId>KillaDesign</VendorId>
     <VendorDescription>Killa Design</VendorDescription>
   </AddIn>

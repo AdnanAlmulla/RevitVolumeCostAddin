@@ -33,9 +33,10 @@ the shared-components inventory and the plugin release tool. These **do** apply:
 (units in names, named and cited constants, one step per line), xUnit tests that compile pure source in by
 path, and the `BACKLOG.md` convention.
 
-Status (2026-11-26): **phase 0 of the build plan.** The raw dump command (F-004) is built for Revit 2024 and
-2026 and its hand-off package is ready for the BIM technician; nothing has run inside Revit yet. No snapshot classes until the dump is
-back.
+Status (2026-11-26): **phase 1 and 4 code built, not yet run in Revit.** The raw dump (F-004) ran on a real tower
+and matched Revit's takeoff. Version 0.2.0 adds snapshot classes v1 (`src/Contracts`), the ribbon tab (Sync to
+website, Raw dump), the snapshot after each Synchronize with Central, the outbox and the uploader (`src/Uploader`).
+Its hand-off (`docs/technician/sync-instructions.md`) is the first snapshot test on the same detached copy.
 
 ## How work lands here
 
@@ -107,6 +108,12 @@ and have the technician note Revit's exact build in every check.
 - **Facts only** (engineer, 2026-11-25): the add-in sends category, family, type, level, material and the raw
   value of each named parameter. It never classifies (retaining or shear wall, which division): the website holds
   those rules per project. One row per element and material; area is optional (beams and columns have none).
+- **As built, schema 1 (2026-11-26; `src/Contracts/Snapshot.cs`):** facts only. Every model element with a material
+  volume (shoring walls and a stair's runs and landings included: the website's rules leave them out), its materials
+  (name, class, m³, m²), its level, base and top level names, bounding-box bottom and top (m), and every project and
+  shared parameter with a value, on the element and, once per type, on its type. Lengths, areas and volumes in
+  metric. No parameter name is written in code: the website picks them by name (a per-project setting there).
+  About 0.3–0.6 MB gzipped for a 6,000-element tower.
 - **Element row:** Revit's `UniqueId` (the key) and element id (64-bit, for display), category, family/type, level, material, volume (m³), area (m²), count, and
   the tags below.
 
@@ -158,7 +165,9 @@ add-in's.
 
 ```
 src/Addin/            Revit add-in, configurations R24 and R26 (others when needed)
-  Commands/           RawDumpCommand (Add-Ins > External Tools), read-only
+  App.cs              starts with Revit: the ribbon tab, and the snapshot after each Synchronize with Central
+  Commands/           SyncCommand (Sync to website), RawDumpCommand; both read-only
+  Snapshots/          SnapshotReader (Revit), SnapshotJson and SnapshotOutbox (pure, tested)
   RawDump/            RawDumpWriter: the F-004 dump, format "raw-dump-1"
   Json/, Units/       pure code (no Revit API), compiled into the tests by path
   RevitApi/           ElementIds: the one place an ElementId becomes a number
@@ -166,7 +175,8 @@ tests/Addin.Tests/    xUnit, pure source compiled in by path
 installer/            Install.cmd + Install-Addin.ps1, shipped in the hand-off package
 docs/technician/      the one-page instruction sheets that go to the BIM technician
 Build-Package.ps1     builds the hand-off package into artifacts/ (not committed)
-src/Contracts/        not yet: netstandard2.0 snapshot classes, written from the dump (F-004, F-001)
+src/Contracts/        snapshot classes v1 (netstandard2.0); compiled into the add-in and the website by path
+src/Uploader/         sends the outbox to the website (.NET 8 console, no packages); --once, --site, --outbox
 _harnesses/           throwaway probes, never part of a build
 ```
 
@@ -182,6 +192,17 @@ _harnesses/           throwaway probes, never part of a build
   `<product>\<product>.dll`), `Install.cmd` and the instruction sheet. The installer copies each year's files
   to `%AppData%\Autodesk\Revit\Addins\<year>\` for each Revit installed, removes Windows' "downloaded" mark
   (Revit 2024 can refuse a marked DLL), refuses while Revit is open, and never runs the add-in from a network share (the ETABS crash of 2026-11-23).
+- **Snapshots** go to `%LocalAppData%\<product>\Outbox\` (outside OneDrive), written under a temporary name and
+  renamed when complete. The add-in logs each one, with its read time, to `%LocalAppData%\<product>\Logs\addin.log`.
+  The snapshot after Synchronize with Central is **off unless switched on per PC** (`%AppData%\<product>\addin.json`,
+  `"snapshotAfterSync": true`; `AddinSettings`): it holds Revit for its read after every sync of every cloud model,
+  and that time is unmeasured until the first snapshot test. When on, it skips family files, detached copies and
+  models not in ACC, never shows a dialog and can't fail the sync; it does not yet tell structural models from
+  others. The Sync button works on any project model.
+- **The uploader** reads the site's address from `%AppData%\<product>\uploader.json` (a per-PC setting, never
+  committed), posts each snapshot oldest first, moves it to `Sent` or (refused) `Rejected` with the reason, and
+  retries anything else every minute. No sign-in yet (deferred); the site takes uploads only from its own PC until
+  the network is opened and sign-in added, so a technician's snapshot comes back by hand for now.
 - The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.
 - A cloud model can't be opened in a newer Revit without upgrading it for everyone, so a Revit step always
   runs in the model's own Revit year; the instruction sheets say so.
