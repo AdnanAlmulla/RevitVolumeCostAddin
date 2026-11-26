@@ -55,6 +55,8 @@ down measurably.
 Confirm the 2027 runtime against Autodesk's 2027 SDK. Element tagging waits for F-002. The uploader's target
 needs the website's API and Entra registration (website repo); until then, test against a local stub.
 Moved here from the website repo's F-003 on 2026-11-25.
+Sign-in is deferred (engineer, 2026-11-26): build the uploader so the token step can be added later; the upload
+address is a per-PC setting.
 **Progress (2026-11-26):** The project exists with configurations R24 and R26, the product-name property, the
 build-time `.addin` manifest, the installer, CI (`.github/workflows/build.yml`, not yet run: nothing pushed) and the
 ft³ / ft² to m³ / m² conversion (`src/Addin/Units/RevitInternalUnits.cs`) with tests against hand-checked beam,
