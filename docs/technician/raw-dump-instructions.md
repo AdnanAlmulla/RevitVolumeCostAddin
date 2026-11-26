@@ -12,9 +12,10 @@ be upgraded, **stop and cancel**: that is the wrong Revit year, and upgrading a 
 ## 1. Install (2 minutes)
 
 1. Close every Revit window.
-2. Unzip this package to a folder on your own PC (for example your Desktop), not on a network drive.
-3. Double-click **Install.cmd**. If Windows warns about a downloaded file, choose **More info** > **Run anyway**.
-   It installs for each of Revit 2024 and 2026 that your PC has, and says so.
+2. Save the .zip on your own PC (for example your Desktop), not on a network drive. Right-click it >
+   **Properties**, tick **Unblock** at the bottom (if it is there) > **OK**. Then right-click > **Extract All**.
+3. In the extracted folder, double-click **Install.cmd**. It installs for each of Revit 2024 and 2026 that your
+   PC has, and says so. If it asks whether to run a script, type **R** and press Enter.
 
 ## 2. Run the dump
 
