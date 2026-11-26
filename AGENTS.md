@@ -42,6 +42,14 @@ test copy of the site; not yet on a modeller's PC). Version 0.5.0's **3D shapes*
 the tower (0.9 to 1.4 s, F-003). Version 0.6.0 writes the shapes beside every snapshot instead (engineer, 2026-11-26:
 "Yes, the sync should send the shape. I wouldn't want them to click on the 3D button each time"); the button is gone.
 
+**Where things stand (end of 2026-11-26):** 0.6.0 is with the engineer and **not yet run in Revit**. He first agrees the
+parameters with the technicians (2026-11-27; `RevitVolumeCost/docs/Revit parameter standard.xlsx`, names in the
+website's `appsettings.json` "Classification"), then has 0.6 tested on a tagged model. Its first sync proves the shapes
+after a sync and their upload; the website side is live. **He does not want to re-issue versions lightly: hold add-in
+changes and batch them into one version.** Models are assumed to be on ACC (engineer, 2026-11-26: the technicians are
+"centralizing to ACC"); the after-sync snapshot skips models not in ACC, as ruled on 2026-11-25. No changes are held
+at the moment.
+
 ## How work lands here
 
 - **Every contributor's change arrives as a pull request into `master`, and the engineer (Adnan Almulla)
