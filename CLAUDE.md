@@ -38,8 +38,9 @@ Status (2026-11-26): **version 0.2.0 has run in Revit.** The technician's Sync t
 material equals the raw dump's exactly. Version 0.3.0 takes the snapshot after every Synchronize with Central by
 default (engineer, 2026-11-26). Version 0.4.0 ships the uploader in the hand-off package: installed by `Install.cmd`,
 started at Windows sign-in, sending to the website on the office network with its site password (checked against a
-test copy of the site; not yet on a modeller's PC). Version 0.5.0 adds the **3D shapes** button, the timing probe for
-the website's 3D view (F-003); its first run on the largest tower is the technician's next step.
+test copy of the site; not yet on a modeller's PC). Version 0.5.0's **3D shapes** button timed the shape export on
+the tower (0.9 to 1.4 s, F-003). Version 0.6.0 writes the shapes beside every snapshot instead (engineer, 2026-11-26:
+"Yes, the sync should send the shape. I wouldn't want them to click on the 3D button each time"); the button is gone.
 
 ## How work lands here
 
@@ -169,8 +170,8 @@ add-in's.
 ```
 src/Addin/            Revit add-in, configurations R24 and R26 (others when needed)
   App.cs              starts with Revit: the ribbon tab, and the snapshot after each Synchronize with Central
-  Commands/           SyncCommand (Sync to website), RawDumpCommand, ShapeExportCommand (3D shapes); all read-only
-  Shapes/             ShapeReader (Revit); ShapeMesh and ShapeFile (pure, tested): the "shapes-1" file for the 3D view
+  Commands/           SyncCommand (Sync to website), RawDumpCommand; both read-only
+  Shapes/             ShapeOutbox and ShapeReader (Revit); ShapeMesh and ShapeFile (pure, tested): the "shapes-1" file
   Snapshots/          SnapshotReader (Revit), SnapshotJson and SnapshotOutbox (pure, tested)
   RawDump/            RawDumpWriter: the F-004 dump, format "raw-dump-1"
   Json/, Units/       pure code (no Revit API), compiled into the tests by path
@@ -196,6 +197,11 @@ _harnesses/           throwaway probes, never part of a build
   `<product>\<product>.dll`), `Install.cmd` and the instruction sheet. The installer copies each year's files
   to `%AppData%\Autodesk\Revit\Addins\<year>\` for each Revit installed, removes Windows' "downloaded" mark
   (Revit 2024 can refuse a marked DLL), refuses while Revit is open, and never runs the add-in from a network share (the ETABS crash of 2026-11-23).
+- **3D shapes ride with every snapshot** (0.6.0): `ShapeOutbox` writes `<snapshot name>.shapes.json.gz` beside it in
+  the outbox ("shapes-1": the snapshot's elements, found again by UniqueId; corners in whole mm; Medium detail, coarsest
+  triangles, a failed element read again at Fine). About 1 s and 1.2 MB on the 6,002-element tower. A failure costs
+  the 3D view an update, never the snapshot. The uploader sends shapes after snapshots, to `/api/shapes`; the website
+  answers 409 while it has no snapshot of that model, and the uploader tries again.
 - **Snapshots** go to `%LocalAppData%\<product>\Outbox\` (outside OneDrive), written under a temporary name and
   renamed when complete. The add-in logs each one, with its read time, to `%LocalAppData%\<product>\Logs\addin.log`.
   The snapshot after Synchronize with Central is **on by default** (engineer, 2026-11-26: "Let us do the automatic

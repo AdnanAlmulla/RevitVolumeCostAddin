@@ -79,7 +79,8 @@ s), 279,527 triangles, 1.2 MB; finer setting (Fine, 0.5) 2.3 s and 1.1 s, 1,100,
 159 elements failed at the written setting and none at the finer one, so they were missing from the file; v0.5.1 reads
 a failed element again at the finer setting and logs each failure's reason. Same run: the snapshot after Synchronize
 with Central fired on the cloud model (read 9.0 s), and the uploader delivered all four snapshots once its password
-was corrected. Left: the engineer's ruling on whether shapes ride on each sync and the uploader.
+was corrected. Ruled the same day: shapes ride on every sync (0.6.0, built and checked through the uploader against
+a test copy of the site; the Revit side not yet run).
 
 ## Done
 

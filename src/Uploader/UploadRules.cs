@@ -19,7 +19,8 @@ namespace Uploader
         /// What one try at sending a snapshot means. No answer at all (the site is down, the PC is offline), a server
         /// error, a timeout or "too many requests" are worth retrying. So is a refused password (401, 403): it is this
         /// PC's sitePassword setting that is wrong or missing, not the file, so the file goes once the setting is fixed.
-        /// Any other refusal is about the file itself.
+        /// So is "conflict" (409): 3D shapes whose model's snapshot the website has not taken in yet. Any other refusal
+        /// is about the file itself.
         /// </summary>
         public static UploadOutcome OutcomeOf(HttpStatusCode? statusCode)
         {
@@ -34,7 +35,8 @@ namespace Uploader
                 return UploadOutcome.Delivered;
             }
             bool isPasswordRefused = statusCode == HttpStatusCode.Unauthorized || statusCode == HttpStatusCode.Forbidden;
-            bool isWorthRetrying = code >= 500 || statusCode == HttpStatusCode.RequestTimeout || statusCode == HttpStatusCode.TooManyRequests || isPasswordRefused;
+            bool isModelNotYetKnown = statusCode == HttpStatusCode.Conflict;
+            bool isWorthRetrying = code >= 500 || statusCode == HttpStatusCode.RequestTimeout || statusCode == HttpStatusCode.TooManyRequests || isPasswordRefused || isModelNotYetKnown;
             return isWorthRetrying ? UploadOutcome.TryAgain : UploadOutcome.Rejected;
         }
     }

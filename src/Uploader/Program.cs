@@ -3,7 +3,8 @@ using System.Reflection;
 using System.Text.Json;
 using Uploader;
 
-// Sends every snapshot in the add-in's outbox to the website, oldest first, and keeps trying until each one lands.
+// Sends every snapshot in the add-in's outbox to the website, oldest first, then their 3D shapes, and keeps trying
+// until each one lands.
 //   <product>.Uploader.exe          keeps running, trying the outbox every minute (started at Windows sign-in by the
 //                                   installer); a second copy exits at once
 //   <product>.Uploader.exe --once   one pass, then exits
@@ -14,7 +15,11 @@ using Uploader;
 // %LocalAppData%\<product>\Logs\uploader.log.
 
 const string SNAPSHOT_FILE_PATTERN = "*.snapshot.json.gz";
-const string UPLOAD_PATH = "/api/snapshots";
+const string SNAPSHOT_UPLOAD_PATH = "/api/snapshots";
+// Each snapshot's 3D shapes, written beside it by the add-in, go to their own address, after the snapshots: the
+// website files shapes under the model a snapshot named.
+const string SHAPES_FILE_PATTERN = "*.shapes.json.gz";
+const string SHAPES_UPLOAD_PATH = "/api/shapes";
 // The website's header for its site password (the website repo's SiteGate.PASSWORD_HEADER).
 const string SITE_PASSWORD_HEADER = "X-Site-Password";
 const string DEFAULT_SITE_ADDRESS = "http://localhost:5080";
@@ -68,7 +73,8 @@ async Task SendOutboxAsync()
     string siteAddress = ArgumentAfter("--site") ?? ReadSetting(settingsPath, "siteAddress") ?? DEFAULT_SITE_ADDRESS;
     string? sitePassword = ReadSetting(settingsPath, "sitePassword");
     string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
-    if (snapshotPaths.Length == 0)
+    string[] shapesPaths = Directory.GetFiles(outboxFolder, SHAPES_FILE_PATTERN).OrderBy(path => path).ToArray();
+    if (snapshotPaths.Length == 0 && shapesPaths.Length == 0)
     {
         return;
     }
@@ -79,20 +85,24 @@ async Task SendOutboxAsync()
     }
     foreach (string snapshotPath in snapshotPaths)
     {
-        await SendAsync(http, snapshotPath);
+        await SendAsync(http, snapshotPath, SNAPSHOT_UPLOAD_PATH);
+    }
+    foreach (string shapesPath in shapesPaths)
+    {
+        await SendAsync(http, shapesPath, SHAPES_UPLOAD_PATH);
     }
 }
 
-async Task SendAsync(HttpClient client, string snapshotPath)
+async Task SendAsync(HttpClient client, string filePath, string uploadPath)
 {
-    string fileName = Path.GetFileName(snapshotPath);
+    string fileName = Path.GetFileName(filePath);
     System.Net.HttpStatusCode? statusCode = null;
     string reason = "";
     try
     {
-        using var content = new ByteArrayContent(await File.ReadAllBytesAsync(snapshotPath));
+        using var content = new ByteArrayContent(await File.ReadAllBytesAsync(filePath));
         content.Headers.ContentType = new MediaTypeHeaderValue("application/gzip");
-        using HttpResponseMessage response = await client.PostAsync(UPLOAD_PATH, content);
+        using HttpResponseMessage response = await client.PostAsync(uploadPath, content);
         statusCode = response.StatusCode;
         reason = await response.Content.ReadAsStringAsync();
     }
@@ -105,11 +115,11 @@ async Task SendAsync(HttpClient client, string snapshotPath)
     switch (outcome)
     {
         case UploadOutcome.Delivered:
-            File.Move(snapshotPath, Path.Combine(sentFolder, fileName), overwrite: true);
+            File.Move(filePath, Path.Combine(sentFolder, fileName), overwrite: true);
             Log($"sent {fileName} to {client.BaseAddress}");
             break;
         case UploadOutcome.Rejected:
-            File.Move(snapshotPath, Path.Combine(rejectedFolder, fileName), overwrite: true);
+            File.Move(filePath, Path.Combine(rejectedFolder, fileName), overwrite: true);
             await File.WriteAllTextAsync(Path.Combine(rejectedFolder, fileName + ".reason.txt"), $"{(int?)statusCode} {reason}");
             Log($"refused {fileName} ({(int?)statusCode}): {reason}");
             break;

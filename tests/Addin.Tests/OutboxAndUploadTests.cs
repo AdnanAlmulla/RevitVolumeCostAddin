@@ -40,6 +40,7 @@ namespace Addin.Tests
         [InlineData(HttpStatusCode.UnsupportedMediaType, UploadOutcome.Rejected)]
         [InlineData(HttpStatusCode.Unauthorized, UploadOutcome.TryAgain)]
         [InlineData(HttpStatusCode.Forbidden, UploadOutcome.TryAgain)]
+        [InlineData(HttpStatusCode.Conflict, UploadOutcome.TryAgain)]
         [InlineData(HttpStatusCode.InternalServerError, UploadOutcome.TryAgain)]
         [InlineData(HttpStatusCode.ServiceUnavailable, UploadOutcome.TryAgain)]
         [InlineData(HttpStatusCode.RequestTimeout, UploadOutcome.TryAgain)]

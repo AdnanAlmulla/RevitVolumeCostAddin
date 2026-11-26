@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Globalization;
 using Addin.Json;
 using Addin.RevitApi;
 using Addin.Units;
@@ -60,8 +59,6 @@ namespace Addin.Shapes
     /// </summary>
     internal static class ShapeReader
     {
-        private const int PROGRESS_LOG_EVERY_ELEMENTS = 1000;
-
         /// <summary>
         /// One pass over the elements. With elementsJson, each element's shape is written as it is read. An element the
         /// setting cannot read is read again at retrySetting, when given (first run, 2026-11-26: 159 of 6,002 elements
@@ -80,10 +77,6 @@ namespace Addin.Shapes
             foreach (Element element in elements)
             {
                 outcome.ElementCount++;
-                if (outcome.ElementCount % PROGRESS_LOG_EVERY_ELEMENTS == 0)
-                {
-                    AddinInfo.Log($"3D shapes ({setting.Name}): {outcome.ElementCount} of {elements.Count} elements, {totalTime.Elapsed.TotalSeconds:0.0} s so far");
-                }
                 try
                 {
                     ShapeMesh shape;
@@ -166,30 +159,6 @@ namespace Addin.Shapes
             string reason = exception.GetType().Name + ": " + exception.Message;
             outcome.FailureCountByReason.TryGetValue(reason, out int countSoFar);
             outcome.FailureCountByReason[reason] = countSoFar + 1;
-        }
-
-        public static void Log(ShapePassOutcome outcome)
-        {
-            AddinInfo.Log(string.Format(CultureInfo.InvariantCulture,
-                "3D shapes ({0}): {1} elements, {2} without a shape, {3} unreadable, {4:N0} triangles, {5:N0} corners; " +
-                "geometry {6:0.0} s, triangles {7:0.0} s, writing {8:0.0} s, total {9:0.0} s",
-                outcome.Setting.Name, outcome.ElementCount, outcome.ElementsWithoutShapeCount, outcome.UnreadableCount,
-                outcome.TriangleCount, outcome.CornerCount,
-                outcome.GeometrySeconds, outcome.TriangulateSeconds, outcome.WriteSeconds, outcome.TotalSeconds));
-            if (outcome.RetriedCount > 0)
-            {
-                AddinInfo.Log($"3D shapes ({outcome.Setting.Name}): {outcome.RetriedCount} elements read again at the finer setting");
-            }
-            foreach (KeyValuePair<string, int> failure in outcome.FailureCountByReason)
-            {
-                AddinInfo.Log($"3D shapes ({outcome.Setting.Name}):   failed {failure.Value} times: {failure.Key}");
-            }
-            foreach (KeyValuePair<string, CategoryShapeCount> entry in outcome.CountByCategory)
-            {
-                AddinInfo.Log(string.Format(CultureInfo.InvariantCulture,
-                    "3D shapes ({0}):   {1}: {2} elements, {3} without a shape, {4:N0} triangles",
-                    outcome.Setting.Name, entry.Key, entry.Value.ElementCount, entry.Value.ElementsWithoutShapeCount, entry.Value.TriangleCount));
-            }
         }
 
         public static void WriteSummary(JsonWriter json, ShapePassOutcome outcome)

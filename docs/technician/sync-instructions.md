@@ -1,27 +1,27 @@
-# Add-in 0.5: instructions for the BIM technicians
+# Add-in 0.6: instructions for the BIM technicians
 
-**New in 0.5:** a **3D shapes** button, to run once on the largest tower (section 3).
+**New in 0.6:** each snapshot also carries the model's **3D shapes**, for the website's 3D view. Nothing to click: it
+adds about a second to the snapshot after each sync. The **3D shapes** button from 0.5 is gone.
 
-**New in 0.4:** the snapshots **reach the website by themselves**. A small program, the **uploader**, is installed
-with the add-in: it starts when you sign in to Windows, has no window, and sends each new snapshot to the website
-within a minute. If the website can't be reached, it keeps trying.
-
-As in 0.3, the add-in takes a snapshot of the model's quantities **by itself after every successful Synchronize with
+As before, the add-in takes a snapshot of the model's quantities **by itself after every successful Synchronize with
 Central** on a cloud (ACC) model. Nothing pops up. Revit is busy for a few seconds after each sync while it reads
-(about 4 to 11 seconds on a large tower). **It changes nothing in the model.** The **Sync to website** and **Raw dump**
-buttons on the **RevitVolumeCost** tab work as before.
+(about 5 to 12 seconds on a large tower). **It changes nothing in the model.** A small program, the **uploader**,
+starts when you sign in to Windows, has no window, and sends each snapshot to the website within a minute; if the
+website can't be reached, it keeps trying. The **Sync to website** and **Raw dump** buttons on the **RevitVolumeCost**
+tab work as before.
 
 Install it only on the PCs of people who model **structural** models: it takes a snapshot of every cloud model synced
 on that PC.
 
 ## 1. Install (3 minutes)
 
-Before you start, get two things from Adnan: the **website address** and the **site password**.
+The first time on a PC, get two things from Adnan: the **website address** and the **site password**.
 
 1. Close every Revit window.
 2. Save the .zip on your own PC, not on a network drive. Right-click it > **Properties**, tick **Unblock** (if it is
    there) > **OK**. Then right-click > **Extract All**.
-3. Double-click **Install.cmd**. It replaces the earlier version for each of Revit 2024 and 2026 your PC has.
+3. Double-click **Install.cmd**. It replaces the earlier version for each of Revit 2024 and 2026 your PC has, and the
+   uploader.
    If it asks whether to run a script, type **R** and press Enter.
 4. The first time, it asks for the **website address** and the **site password**: type what Adnan gave you (the
    password does not show as you type) and press Enter after each. It then starts the uploader.
@@ -29,27 +29,12 @@ Before you start, get two things from Adnan: the **website address** and the **s
 
 ## 2. Work as usual
 
-Synchronize with Central as you always do. After each sync a file ending in **.snapshot.json.gz** appears in
-`%LocalAppData%\RevitVolumeCost\Outbox`, and within a minute the uploader moves it to the **Sent** folder beside it.
-Files that stay in the Outbox have not reached the website yet.
+Synchronize with Central as you always do. After each sync two files appear in
+`%LocalAppData%\RevitVolumeCost\Outbox`, one ending in **.snapshot.json.gz** and one in **.shapes.json.gz**, and within
+a minute the uploader moves them to the **Sent** folder beside it. Files that stay in the Outbox have not reached the
+website yet.
 
-## 3. Once: 3D shapes on the largest tower (10 minutes)
-
-The website will show the model in 3D. Before that, we need to know how long Revit takes to read every element's
-shape. Adnan tells you which model is the largest tower.
-
-1. Open that model (in its own Revit year) and wait until it has fully opened. On the **RevitVolumeCost** tab, click
-   **Sync to website** once (the website files the shapes under the model that snapshot names).
-2. On the same tab, click **3D shapes**. **Revit will look frozen** while it reads, perhaps for a few
-   minutes: leave it. It changes nothing in the model.
-3. When the "3D shapes finished" box appears, note the seconds it shows, click OK, and click **3D shapes** a
-   second time (the second run is usually faster).
-4. Send Adnan the two files ending in **.shapes.json.gz** from `Documents\RevitVolumeCost\Shapes`, and
-   `%LocalAppData%\RevitVolumeCost\Logs\addin.log`.
-
-If Revit stops responding for more than 20 minutes, or closes, send `addin.log` anyway: it records how far it got.
-
-## 4. If something seems wrong
+## 3. If something seems wrong
 
 - **Files stay in the Outbox:** open `%LocalAppData%\RevitVolumeCost\Logs\uploader.log`. "will retry ... 403" means
   the site password is wrong: correct it in `%AppData%\RevitVolumeCost\uploader.json` (Notepad), and the uploader
@@ -62,7 +47,7 @@ If Revit stops responding for more than 20 minutes, or closes, send `addin.log` 
 - "The uploader needs .NET 8" when installing: the PC has only Revit 2024. Tell Adnan; the snapshots wait in the
   Outbox.
 
-The snapshot files hold the model's element data, so send them to Adnan only. Keep the site password to yourself.
+The snapshot and shapes files hold the model's data, so send them to Adnan only. Keep the site password to yourself.
 
 ## Afterwards
 

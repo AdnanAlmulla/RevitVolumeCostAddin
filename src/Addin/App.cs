@@ -11,10 +11,10 @@ namespace Addin
 {
     /// <summary>
     /// Starts with Revit: adds the ribbon tab (Sync to website, Raw dump) and takes a snapshot after every successful
-    /// Synchronize with Central (not on Save: CLAUDE.md "It pushes snapshots"), unless this PC switches it off
-    /// (AddinSettings). That snapshot can't fail the sync: it runs after Revit has finished, only reads, shows nothing,
-    /// and a failure is only logged. It holds Revit while it reads: 3.7 to 10.9 s on a 6,000-element tower, which the
-    /// engineer accepted (2026-11-26).
+    /// Synchronize with Central, with its 3D shapes (not on Save: CLAUDE.md "It pushes snapshots"), unless this PC
+    /// switches it off (AddinSettings). That snapshot can't fail the sync: it runs after Revit has finished, only reads,
+    /// shows nothing, and a failure is only logged. It holds Revit while it reads: 3.7 to 10.9 s on a 6,000-element
+    /// tower, plus about 1 s for the shapes, which the engineer accepted (2026-11-26).
     /// </summary>
     public sealed class App : IExternalApplication
     {
@@ -44,10 +44,6 @@ namespace Addin
             {
                 ToolTip = "Writes every element with all its parameters to one file, for checking. Changes nothing in the model.",
             });
-            panel.AddItem(new PushButtonData("ShapeExport", "3D\nshapes", AddinInfo.AssemblyPath, typeof(ShapeExportCommand).FullName)
-            {
-                ToolTip = "Writes the 3D shape of every element to one file and times it, for the website's 3D view. Changes nothing in the model.",
-            });
         }
 
         /// <summary>
@@ -72,8 +68,9 @@ namespace Addin
                 Stopwatch totalTime = Stopwatch.StartNew();
                 Snapshot snapshot = SnapshotReader.Read(document, document.Application, SnapshotTriggers.SYNCHRONIZE_WITH_CENTRAL, AddinInfo.Version);
                 string snapshotPath = SnapshotOutbox.Write(snapshot, SnapshotOutbox.FolderFor(AddinInfo.ProductName));
+                string shapesNote = SyncCommand.WriteShapes(document, snapshot, snapshotPath);
                 totalTime.Stop();
-                AddinInfo.Log($"After sync: {snapshot.Elements.Count} elements ({snapshot.UnreadableElementCount} unreadable), read {snapshot.ReadSeconds:0.0} s, total {totalTime.Elapsed.TotalSeconds:0.0} s, {snapshotPath}");
+                AddinInfo.Log($"After sync: {snapshot.Elements.Count} elements ({snapshot.UnreadableElementCount} unreadable), read {snapshot.ReadSeconds:0.0} s, {shapesNote}, total {totalTime.Elapsed.TotalSeconds:0.0} s, {snapshotPath}");
             }
             catch (Exception exception)
             {
