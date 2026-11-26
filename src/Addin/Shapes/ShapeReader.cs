@@ -39,6 +39,10 @@ namespace Addin.Shapes
         public int ElementCount { get; set; }
         public int ElementsWithoutShapeCount { get; set; }
         public int UnreadableCount { get; set; }
+        // Elements this setting could not read, read again at the retry setting (written with those shapes).
+        public int RetriedCount { get; set; }
+        // Why elements failed, by exception type and message, so the next run can fix the cause.
+        public SortedDictionary<string, int> FailureCountByReason { get; } = new SortedDictionary<string, int>();
         public long TriangleCount { get; set; }
         public long CornerCount { get; set; }
         // Revit's thread is held for the first two: asking for the geometry, and cutting its faces into triangles.
@@ -58,16 +62,16 @@ namespace Addin.Shapes
     {
         private const int PROGRESS_LOG_EVERY_ELEMENTS = 1000;
 
-        /// <summary>One pass over the elements. With elementsJson, each element's shape is written as it is read.</summary>
-        public static ShapePassOutcome Run(IReadOnlyList<Element> elements, ShapeSetting setting, JsonWriter? elementsJson)
+        /// <summary>
+        /// One pass over the elements. With elementsJson, each element's shape is written as it is read. An element the
+        /// setting cannot read is read again at retrySetting, when given (first run, 2026-11-26: 159 of 6,002 elements
+        /// failed at Medium detail with the coarsest triangles and all read at Fine).
+        /// </summary>
+        public static ShapePassOutcome Run(IReadOnlyList<Element> elements, ShapeSetting setting, JsonWriter? elementsJson, ShapeSetting? retrySetting = null)
         {
             var outcome = new ShapePassOutcome(setting);
-            var options = new Options
-            {
-                DetailLevel = setting.DetailLevel,
-                ComputeReferences = false,
-                IncludeNonVisibleObjects = false,
-            };
+            Options options = OptionsFor(setting);
+            Options? retryOptions = retrySetting != null ? OptionsFor(retrySetting) : null;
             Stopwatch totalTime = Stopwatch.StartNew();
             var geometryTime = new Stopwatch();
             var triangulateTime = new Stopwatch();
@@ -82,26 +86,17 @@ namespace Addin.Shapes
                 }
                 try
                 {
-                    geometryTime.Start();
-                    var solids = new List<Solid>();
-                    var meshes = new List<Mesh>();
-                    CollectSolidsAndMeshes(element.get_Geometry(options), solids, meshes);
-                    geometryTime.Stop();
-
-                    triangulateTime.Start();
-                    var shape = new ShapeMesh();
-                    foreach (Solid solid in solids)
+                    ShapeMesh shape;
+                    try
                     {
-                        foreach (Face face in solid.Faces)
-                        {
-                            AddTriangles(shape, face.Triangulate(setting.TriangulationDetail));
-                        }
+                        shape = ReadShape(element, options, setting.TriangulationDetail, geometryTime, triangulateTime);
                     }
-                    foreach (Mesh mesh in meshes)
+                    catch (Exception exception) when (retrySetting != null && retryOptions != null)
                     {
-                        AddTriangles(shape, mesh);
+                        CountFailure(outcome, exception);
+                        shape = ReadShape(element, retryOptions, retrySetting.TriangulationDetail, geometryTime, triangulateTime);
+                        outcome.RetriedCount++;
                     }
-                    triangulateTime.Stop();
 
                     string categoryName = element.Category?.Name ?? "(no category)";
                     Count(outcome, categoryName, shape);
@@ -113,11 +108,12 @@ namespace Addin.Shapes
                         writeTime.Stop();
                     }
                 }
-                catch (Exception)
+                catch (Exception exception)
                 {
                     geometryTime.Stop();
                     triangulateTime.Stop();
                     writeTime.Stop();
+                    CountFailure(outcome, exception);
                     outcome.UnreadableCount++;
                 }
             }
@@ -130,6 +126,48 @@ namespace Addin.Shapes
             return outcome;
         }
 
+        private static Options OptionsFor(ShapeSetting setting)
+        {
+            return new Options
+            {
+                DetailLevel = setting.DetailLevel,
+                ComputeReferences = false,
+                IncludeNonVisibleObjects = false,
+            };
+        }
+
+        private static ShapeMesh ReadShape(Element element, Options options, double triangulationDetail, Stopwatch geometryTime, Stopwatch triangulateTime)
+        {
+            geometryTime.Start();
+            var solids = new List<Solid>();
+            var meshes = new List<Mesh>();
+            CollectSolidsAndMeshes(element.get_Geometry(options), solids, meshes);
+            geometryTime.Stop();
+
+            triangulateTime.Start();
+            var shape = new ShapeMesh();
+            foreach (Solid solid in solids)
+            {
+                foreach (Face face in solid.Faces)
+                {
+                    AddTriangles(shape, face.Triangulate(triangulationDetail));
+                }
+            }
+            foreach (Mesh mesh in meshes)
+            {
+                AddTriangles(shape, mesh);
+            }
+            triangulateTime.Stop();
+            return shape;
+        }
+
+        private static void CountFailure(ShapePassOutcome outcome, Exception exception)
+        {
+            string reason = exception.GetType().Name + ": " + exception.Message;
+            outcome.FailureCountByReason.TryGetValue(reason, out int countSoFar);
+            outcome.FailureCountByReason[reason] = countSoFar + 1;
+        }
+
         public static void Log(ShapePassOutcome outcome)
         {
             AddinInfo.Log(string.Format(CultureInfo.InvariantCulture,
@@ -138,6 +176,14 @@ namespace Addin.Shapes
                 outcome.Setting.Name, outcome.ElementCount, outcome.ElementsWithoutShapeCount, outcome.UnreadableCount,
                 outcome.TriangleCount, outcome.CornerCount,
                 outcome.GeometrySeconds, outcome.TriangulateSeconds, outcome.WriteSeconds, outcome.TotalSeconds));
+            if (outcome.RetriedCount > 0)
+            {
+                AddinInfo.Log($"3D shapes ({outcome.Setting.Name}): {outcome.RetriedCount} elements read again at the finer setting");
+            }
+            foreach (KeyValuePair<string, int> failure in outcome.FailureCountByReason)
+            {
+                AddinInfo.Log($"3D shapes ({outcome.Setting.Name}):   failed {failure.Value} times: {failure.Key}");
+            }
             foreach (KeyValuePair<string, CategoryShapeCount> entry in outcome.CountByCategory)
             {
                 AddinInfo.Log(string.Format(CultureInfo.InvariantCulture,
@@ -155,6 +201,7 @@ namespace Addin.Shapes
             json.Property("elements", outcome.ElementCount);
             json.Property("elementsWithoutShape", outcome.ElementsWithoutShapeCount);
             json.Property("unreadable", outcome.UnreadableCount);
+            json.Property("retried", outcome.RetriedCount);
             json.Property("triangles", outcome.TriangleCount);
             json.Property("corners", outcome.CornerCount);
             json.Property("geometrySeconds", outcome.GeometrySeconds);

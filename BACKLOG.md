@@ -73,6 +73,13 @@ the time spent asking Revit for geometry, cutting faces into triangles and writi
 category (elements with no shape, triangles), to `addin.log`, and progress every 1,000 elements. Not run in Revit
 yet; not part of a sync (the engineer rules on that with the times). Sheet: `docs/technician/sync-instructions.md`
 section 3.
+**First run (2026-11-26, Revit 2026, the tower moved to ACC as a test model, 6,002 elements):** written setting
+(Medium, coarsest) 1.4 s the first time and 0.9 s the second (geometry 0.5-0.6 s, triangles 0.3-0.6 s, writing 0.1-0.2
+s), 279,527 triangles, 1.2 MB; finer setting (Fine, 0.5) 2.3 s and 1.1 s, 1,100,729 triangles (floors 750k of them).
+159 elements failed at the written setting and none at the finer one, so they were missing from the file; v0.5.1 reads
+a failed element again at the finer setting and logs each failure's reason. Same run: the snapshot after Synchronize
+with Central fired on the cloud model (read 9.0 s), and the uploader delivered all four snapshots once its password
+was corrected. Left: the engineer's ruling on whether shapes ride on each sync and the uploader.
 
 ## Done
 

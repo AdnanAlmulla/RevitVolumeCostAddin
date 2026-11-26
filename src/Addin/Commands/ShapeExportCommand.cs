@@ -72,7 +72,7 @@ namespace Addin.Commands
                 WriteHeader(json, document, commandData.Application.Application);
                 json.PropertyName("elements");
                 json.BeginArray();
-                writtenPass = ShapeReader.Run(shapedElements, WRITTEN_SETTING, json);
+                writtenPass = ShapeReader.Run(shapedElements, WRITTEN_SETTING, json, COUNTED_SETTING);
                 json.EndArray();
                 ShapeReader.Log(writtenPass);
 
