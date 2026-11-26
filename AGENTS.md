@@ -35,9 +35,9 @@ Status (2026-11-25): **v0.1 planning.** No code yet.
 ## How work lands here
 
 - **Every contributor's change arrives as a pull request into `master`, and the engineer (Adnan Almulla)
-  reviews and merges it.** Contributors never push to `master`. There is no branch rule (the account stays on
-  GitHub's free plan): the repo relies on trust, "unless proven otherwise" (engineer, 2026-11-25). See
-  `CONTRIBUTING.md`.
+  reviews and merges it.** Contributors never push to `master`. The repo is **public** (engineer, 2026-11-25) so
+  that a branch ruleset protecting `master` is available on GitHub's free plan; the engineer creates and owns
+  that ruleset. See `CONTRIBUTING.md`.
 - **`src/Contracts` is shared with the website.** The website repo builds against a clone of this repo
   placed beside it, so a change to a snapshot class changes what the API receives. Keep changes additive
   (new optional fields); renaming or removing a field needs the engineer's say-so in the pull request.
@@ -165,7 +165,10 @@ docs/            backlog-archive.md
 - **Work tracking:** `BACKLOG.md` + `docs/backlog-archive.md` (IDs `F-` feature, `B-` bug, `T-` tech
   debt, never reused). This repo's IDs are its own; the website repo has a separate list.
 - **CLAUDE.md** is the source; this file mirrors it for Codex. Apply every edit to both.
-- Remote: https://github.com/AdnanAlmulla/RevitVolumeCostAddin (private).
+- Remote: https://github.com/AdnanAlmulla/RevitVolumeCostAddin (**public**, 2026-11-25).
+- **No licence** (engineer, 2026-11-25): the repo carries no open-source licence, so no one is granted the right
+  to copy or reuse the code. Don't add a `LICENSE` file or licence text. Because it is public, never commit
+  secrets, tenant or client ids, internal paths or company cost data here.
 - **Claude commits, never pushes** (engineer, 2026-11-25): the engineer pushes when he chooses. Contributors
   still follow `CONTRIBUTING.md`.
 - Author: Adnan Almulla @ Killa Design.
