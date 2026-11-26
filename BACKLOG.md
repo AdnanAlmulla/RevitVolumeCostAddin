@@ -36,6 +36,11 @@ which also asks for a multi-category material takeoff (category, material, m³ t
 **Not yet run inside Revit**: Revit's unsigned add-in prompt needs a click, so the technician's run is the first.
 Next, when the files are back: summarise the parameter names and fill rates (F-002), compare the dump's per-category
 and per-material volumes with the takeoff, then write snapshot classes v1. Never commit the files (public repo).
+**Result (2026-11-26):** The technician ran it in Revit 2026.5 on a detached copy of a real tower: 7,667 elements read in
+18.5 s, none unreadable. Its volume per material matches Revit's material takeoff to 0.001 m³ on 10 of 11 materials;
+the 11th differs by 0.02% (two elements the takeoff left out; a re-export with Category will trace them). The
+findings and the engineer's open decisions are in the private website repo (`docs/raw-dump-findings.md`). Still to
+do before closing: the engineer's rulings (F-002), then snapshot classes v1.
 
 ### [F-001] P1 — One Revit add-in, Revit 2024 and 2026 first, then 2022 to 2027
 <!-- type: feature | added: 2026-11-25 -->
@@ -76,6 +81,12 @@ override (suggested, not decided).
 **Where:** The engineer, with the BIM technician; the raw dump (F-004) answers most of it.
 **Acceptance:** The convention is written into `CLAUDE.md`, and the add-in's tagging follows it.
 **Notes:** Moved here from the website repo's F-002 on 2026-11-25.
+**Found in the raw dump (2026-11-26):** concrete grade is already a shared instance parameter on most elements. Nothing
+marks division, RC or PT, or retaining against shear walls. Element kind and pile type can be read from family and
+type names, and pile diameter and length from type parameters. Many walls and columns run through several storeys
+and across division boundaries, so the snapshot needs each element's base and top level. Proposals and the
+engineer's five decisions: website repo `docs/raw-dump-findings.md`. Parameter names stay a per-office setting,
+never written into this public repo.
 
 ### [F-003] P3 — Time the 3D shape export on the largest tower (deferred)
 <!-- type: feature | added: 2026-11-25 -->
