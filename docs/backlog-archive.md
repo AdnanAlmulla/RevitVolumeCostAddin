@@ -2,6 +2,32 @@
 
 Full records of landed `BACKLOG.md` items, newest first.
 
+## [F-002] Division, element-kind and concrete-grade conventions
+Landed 2026-11-26: the engineer approved a parameter standard (shared Text instance parameters for division, RC or PT,
+wall function and concrete and steel grade, with exact allowed values). It lives in the private website repo
+(`docs/Revit parameter standard.xlsx`), because parameter names stay out of this public repo. The add-in needs no
+change: it sends every project and shared parameter, and the website reads them by name (a setting there).
+
+<!-- type: feature | added: 2026-11-25 -->
+**What:** Find out how the structural models mark the divisions (piles, foundation, basement, ground floor,
+podium, tower; set per project), RC or PT, element kind (retaining vs shear wall; pile vs raft vs pile cap), pile type /
+diameter and concrete grade. See the reference table in `CLAUDE.md` "What a snapshot carries".
+**Why:** Every filter on the website beyond category depends on these tags.
+**Notes (2026-11-25):** The engineer has ruled that division and concrete grade are **instance parameters**.
+Also since 2026-11-25: **RC or PT** is another instance parameter, read like division and grade.
+Open: their names; shared project parameters bound to the structural categories (suggested, not decided);
+how element kind and pile type are marked; a per-project level-to-division default with the parameter as an
+override (suggested, not decided).
+**Where:** The engineer, with the BIM technician; the raw dump (F-004) answers most of it.
+**Acceptance:** The convention is written into `CLAUDE.md`, and the add-in's tagging follows it.
+**Notes:** Moved here from the website repo's F-002 on 2026-11-25.
+**Found in the raw dump (2026-11-26):** concrete grade is already a shared instance parameter on most elements. Nothing
+marks division, RC or PT, or retaining against shear walls. Element kind and pile type can be read from family and
+type names, and pile diameter and length from type parameters. Many walls and columns run through several storeys
+and across division boundaries, so the snapshot needs each element's base and top level. Proposals and the
+engineer's five decisions: website repo `docs/raw-dump-findings.md`. Parameter names stay a per-office setting,
+never written into this public repo.
+
 ## [F-004] Raw dump of a real tower
 Landed 2026-11-26: the snapshot classes v1 are written (`src/Contracts`), so its acceptance is met; F-002's three open
 decisions continue there.
