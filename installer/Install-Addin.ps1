@@ -75,5 +75,62 @@ if ($installedYearCount -eq 0) {
     Write-Host 'None of the Revit years this add-in was built for is installed here. Nothing was installed.' -ForegroundColor Red
     exit 1
 }
+
+# The uploader: sends the add-in's snapshots to the website. Copied to this computer's own disk, started now and at
+# every Windows sign-in (a shortcut in the user's Startup folder), with no window. Its two settings, the website's
+# address and the site password, come from Adnan and are kept in %AppData%\<product>\uploader.json, never in the package.
+$sourceUploaderFolder = Join-Path $packageFolder 'Uploader'
+$uploaderProgramName = "$productName.Uploader"
+$targetUploaderFolder = Join-Path $env:LOCALAPPDATA "$productName\Uploader"
+$uploaderProgram = Join-Path $targetUploaderFolder "$uploaderProgramName.exe"
+$uploaderSettingsPath = Join-Path $env:APPDATA "$productName\uploader.json"
+$startupShortcutPath = Join-Path ([Environment]::GetFolderPath('Startup')) "$productName uploader.lnk"
+# The uploader is built for .NET 8, which Revit 2025 and 2026 install; a PC with only Revit 2024 may not have it.
+$dotNet8Folders = Get-ChildItem -Path (Join-Path $env:ProgramFiles 'dotnet\shared\Microsoft.NETCore.App') -Directory -Filter '8.*' -ErrorAction SilentlyContinue
+
+if (-not (Test-Path $sourceUploaderFolder)) {
+    Write-Host 'This package has no uploader: snapshots stay in the outbox for now.'
+}
+elseif (-not $dotNet8Folders) {
+    Write-Host 'The uploader needs .NET 8, which is not on this computer: snapshots stay in the outbox. Tell Adnan.' -ForegroundColor Red
+}
+elseif ($PSCmdlet.ShouldProcess($targetUploaderFolder, 'Install the uploader and start it at sign-in')) {
+    Get-Process -Name $uploaderProgramName -ErrorAction SilentlyContinue | Stop-Process -Force
+    Start-Sleep -Seconds 1
+    if (Test-Path $targetUploaderFolder) {
+        Remove-Item -Recurse -Force -Path $targetUploaderFolder
+    }
+    Copy-Item -Recurse -Path $sourceUploaderFolder -Destination $targetUploaderFolder
+    Get-ChildItem -Recurse -File -Path $targetUploaderFolder | Unblock-File
+
+    $uploaderSettings = $null
+    if (Test-Path $uploaderSettingsPath) {
+        $uploaderSettings = Get-Content -Raw -Path $uploaderSettingsPath | ConvertFrom-Json
+    }
+    $isAddressMissing = (-not $uploaderSettings) -or [string]::IsNullOrWhiteSpace($uploaderSettings.siteAddress) -or ($uploaderSettings.siteAddress -like '*localhost*')
+    $isPasswordMissing = (-not $uploaderSettings) -or [string]::IsNullOrWhiteSpace($uploaderSettings.sitePassword)
+    if ($isAddressMissing -or $isPasswordMissing) {
+        Write-Host ''
+        Write-Host 'The uploader needs the website address and the site password. Adnan gives you both.'
+        $siteAddress = (Read-Host 'Website address (such as http://<computer name>:5080)').Trim().TrimEnd('/')
+        $securePassword = Read-Host 'Site password' -AsSecureString
+        $passwordPointer = [Runtime.InteropServices.Marshal]::SecureStringToBSTR($securePassword)
+        $sitePassword = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($passwordPointer)
+        [Runtime.InteropServices.Marshal]::ZeroFreeBSTR($passwordPointer)
+        New-Item -ItemType Directory -Force -Path (Split-Path $uploaderSettingsPath) | Out-Null
+        $newSettings = [ordered]@{ siteAddress = $siteAddress; sitePassword = $sitePassword } | ConvertTo-Json
+        [IO.File]::WriteAllText($uploaderSettingsPath, $newSettings)
+    }
+
+    $shell = New-Object -ComObject WScript.Shell
+    $shortcut = $shell.CreateShortcut($startupShortcutPath)
+    $shortcut.TargetPath = $uploaderProgram
+    $shortcut.WorkingDirectory = $targetUploaderFolder
+    $shortcut.Save()
+    Start-Process -FilePath $uploaderProgram -WorkingDirectory $targetUploaderFolder
+    Write-Host "Uploader: installed in $targetUploaderFolder, running, and started at every sign-in." -ForegroundColor Green
+    Write-Host "Its log: $env:LOCALAPPDATA\$productName\Logs\uploader.log"
+}
+
 Write-Host ''
 Write-Host 'Done. Start Revit; if it asks about an unsigned add-in, choose "Load Once" or "Always Load".'

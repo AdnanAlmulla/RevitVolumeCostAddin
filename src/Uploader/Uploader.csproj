@@ -5,7 +5,8 @@
     modeller's PC. No third-party packages. Microsoft sign-in is deferred (engineer, 2026-11-26).
   -->
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
+    <!-- No window: it runs from Windows sign-in, and its log is %LocalAppData%\<product>\Logs\uploader.log. -->
+    <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <AssemblyName>$(ProductName).Uploader</AssemblyName>
     <RootNamespace>Uploader</RootNamespace>

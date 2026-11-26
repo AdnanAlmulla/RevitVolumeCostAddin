@@ -36,7 +36,9 @@ path, and the `BACKLOG.md` convention.
 Status (2026-11-26): **version 0.2.0 has run in Revit.** The technician's Sync to website on a real tower (Revit
 2026.5, 6,002 elements) read in 10.9 s the first time and 3.7 s the second, none unreadable, and its volume per
 material equals the raw dump's exactly. Version 0.3.0 takes the snapshot after every Synchronize with Central by
-default (engineer, 2026-11-26). The uploader is built and tested against a test site only.
+default (engineer, 2026-11-26). Version 0.4.0 ships the uploader in the hand-off package: installed by `Install.cmd`,
+started at Windows sign-in, sending to the website on the office network with its site password (checked against a
+test copy of the site; not yet on a modeller's PC).
 
 ## How work lands here
 
@@ -200,10 +202,16 @@ _harnesses/           throwaway probes, never part of a build
   (3.7 to 10.9 s on a 6,000-element tower), skips family files, detached copies and models not in ACC, never shows a
   dialog and can't fail the sync. It does not tell structural models from others, so the add-in goes only on
   structural modellers' PCs. The Sync button works on any project model.
-- **The uploader** reads the site's address from `%AppData%\<product>\uploader.json` (a per-PC setting, never
-  committed), posts each snapshot oldest first, moves it to `Sent` or (refused) `Rejected` with the reason, and
-  retries anything else every minute. No sign-in yet (deferred); the site takes uploads only from its own PC until
-  the network is opened and sign-in added, so a technician's snapshot comes back by hand for now.
+- **The uploader** reads the site's address and the **site password** from `%AppData%\<product>\uploader.json` (per-PC
+  settings, never committed; read again at every pass), posts each snapshot oldest first with the password in the
+  `X-Site-Password` header (the website's gate, 2026-11-26), moves it to `Sent` or (refused) `Rejected` with the reason,
+  and retries anything else every minute, a refused password (401, 403) included: the setting is wrong, not the file.
+  It is a windowless program (`WinExe`) logging to `%LocalAppData%\<product>\Logs\uploader.log`, one copy per user (a
+  named mutex). `Install.cmd` copies it to `%LocalAppData%\<product>\Uploader\`, asks the technician once for the
+  address and password (Adnan gives them; never in the package), puts a shortcut in the user's Startup folder and
+  starts it. It needs .NET 8 (Revit 2025 and 2026 install it); the installer says so when it is missing. Microsoft
+  sign-in replaces the password later. **Not yet run on a modeller's PC**, and the installer's uploader steps were
+  not run here (they write to the real Startup folder).
 - The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.
 - A cloud model can't be opened in a newer Revit without upgrading it for everyone, so a Revit step always
   runs in the model's own Revit year; the instruction sheets say so.

@@ -49,6 +49,10 @@ foreach ($configuration in $REVIT_YEAR_BY_CONFIGURATION.Keys) {
     if ($unexpectedFiles) { throw "The build output holds other DLLs ($($unexpectedFiles.Name -join ', ')); the add-in must carry none." }
 }
 
+# The uploader, one build for every Revit year (.NET 8, no third-party packages).
+$uploaderProject = Join-Path $repositoryFolder 'src\Uploader\Uploader.csproj'
+Invoke-Checked 'Build the uploader' { dotnet publish $uploaderProject -c Release -nologo -v q -o (Join-Path $packageFolder 'Uploader') }
+
 Copy-Item (Join-Path $repositoryFolder 'installer\Install.cmd') $packageFolder
 Copy-Item (Join-Path $repositoryFolder 'installer\Install-Addin.ps1') $packageFolder
 # Shipped as .txt: many PCs have no program for .md files.

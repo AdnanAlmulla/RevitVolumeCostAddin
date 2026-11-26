@@ -45,8 +45,10 @@ checked end to end against a test site). **First run in Revit (2026-11-26):** Sy
 all 11 materials (68,802.0 m³). Version 0.3.0 (2026-11-26) takes the snapshot after every Synchronize with Central
 by default, as the engineer ruled. Still to run in Revit: that automatic snapshot on a real cloud sync, the uploader on
 a modeller's PC, Revit 2024.
-Automatic upload from modellers' PCs waits for the site to be opened to the network and for sign-in (website T-006,
-T-004).
+**Progress (2026-11-26, v0.4.0):** The site is on the office network behind a site password (website T-006); the
+uploader sends it from `uploader.json`, ships in the package, is installed and started at sign-in by `Install.cmd`, and
+was checked end to end against a test copy of the site (refused password retried, then sent; a second copy exits).
+Still to do: the first run on a modeller's PC; Microsoft sign-in in place of the password (website T-004).
 **Progress (2026-11-26, v0.1):** The project exists with configurations R24 and R26, the product-name property, the
 build-time `.addin` manifest, the installer, CI (`.github/workflows/build.yml`, not yet run: nothing pushed) and the
 ft³ / ft² to m³ / m² conversion (`src/Addin/Units/RevitInternalUnits.cs`) with tests against hand-checked beam,
