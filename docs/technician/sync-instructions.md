@@ -38,8 +38,9 @@ Files that stay in the Outbox have not reached the website yet.
 The website will show the model in 3D. Before that, we need to know how long Revit takes to read every element's
 shape. Adnan tells you which model is the largest tower.
 
-1. Open that model (in its own Revit year) and wait until it has fully opened.
-2. On the **RevitVolumeCost** tab, click **3D shapes**. **Revit will look frozen** while it reads, perhaps for a few
+1. Open that model (in its own Revit year) and wait until it has fully opened. On the **RevitVolumeCost** tab, click
+   **Sync to website** once (the website files the shapes under the model that snapshot names).
+2. On the same tab, click **3D shapes**. **Revit will look frozen** while it reads, perhaps for a few
    minutes: leave it. It changes nothing in the model.
 3. When the "3D shapes finished" box appears, note the seconds it shows, click OK, and click **3D shapes** a
    second time (the second run is usually faster).
