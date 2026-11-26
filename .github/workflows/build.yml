@@ -1,0 +1,30 @@
+# Builds the add-in for each Revit year and runs the tests, on every pull request and every push to master.
+# Revit is not installed on the runner: the add-in compiles against reference-only Revit API packages.
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches: [master]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      - name: Tests
+        run: dotnet test tests/Addin.Tests/Addin.Tests.csproj -nologo
+
+      - name: Build for Revit 2024
+        run: dotnet build src/Addin/Addin.csproj -c R24 -nologo
+
+      - name: Build for Revit 2026
+        run: dotnet build src/Addin/Addin.csproj -c R26 -nologo

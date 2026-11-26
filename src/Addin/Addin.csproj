@@ -1,0 +1,61 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!--
+    One project, one build configuration per Revit year. Build with:  dotnet build -c R26   (or -c R24)
+    Revit 2024 runs on .NET Framework 4.8; Revit 2026 on .NET 8 (CLAUDE.md "One code base").
+    Other years (R22, R23, R25, R27) are added when a live project needs them.
+  -->
+  <PropertyGroup>
+    <Configurations>R24;R26</Configurations>
+    <AssemblyName>$(ProductName)</AssemblyName>
+    <RootNamespace>Addin</RootNamespace>
+    <PlatformTarget>x64</PlatformTarget>
+    <Optimize>true</Optimize>
+    <DebugType>portable</DebugType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- The add-in carries no third-party files (CLAUDE.md): only our own DLL goes beside the manifest. -->
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <OutputPath>bin\$(Configuration)\</OutputPath>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R24'">
+    <TargetFramework>net48</TargetFramework>
+    <RevitYear>2024</RevitYear>
+    <RevitApiPackageVersion>2024.3.60</RevitApiPackageVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'R26'">
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <RevitYear>2026</RevitYear>
+    <RevitApiPackageVersion>2026.4.10</RevitApiPackageVersion>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DefineConstants>$(DefineConstants);REVIT$(RevitYear)</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!--
+      Reference-only copies of Autodesk's Revit API, so the add-in (and CI) builds without Revit installed.
+      Compile-time only: Revit supplies the real assemblies, so nothing from these packages is shipped.
+    -->
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPI" Version="$(RevitApiPackageVersion)" PrivateAssets="all" ExcludeAssets="runtime" />
+    <PackageReference Include="Nice3point.Revit.Api.RevitAPIUI" Version="$(RevitApiPackageVersion)" PrivateAssets="all" ExcludeAssets="runtime" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Manifest.addin.template" />
+  </ItemGroup>
+
+  <!--
+    Writes <ProductName>.addin beside the build output, from Manifest.addin.template, so the product name
+    in the manifest comes from Directory.Build.props and from nowhere else.
+  -->
+  <Target Name="WriteAddinManifest" AfterTargets="Build">
+    <PropertyGroup>
+      <ManifestTemplateText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\Manifest.addin.template'))</ManifestTemplateText>
+      <ManifestText>$(ManifestTemplateText.Replace('$ProductName$', '$(ProductName)'))</ManifestText>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(OutDir)$(ProductName).addin" Lines="$(ManifestText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+</Project>

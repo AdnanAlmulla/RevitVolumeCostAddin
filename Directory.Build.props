@@ -1,0 +1,16 @@
+<Project>
+  <!--
+    The product's working name lives here and nowhere else in code (engineer, 2026-11-25: the name is a
+    placeholder). The add-in's assembly, its folder and its .addin manifest all take their name from it.
+    C# namespaces are written in source, so they stay neutral ("Addin", "Contracts") and never carry the name.
+  -->
+  <PropertyGroup>
+    <ProductName>RevitVolumeCost</ProductName>
+    <Version>0.1.0</Version>
+    <Authors>Adnan Almulla @ Killa Design</Authors>
+    <Company>Killa Design</Company>
+    <Product>$(ProductName)</Product>
+    <LangVersion>latest</LangVersion>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+</Project>
