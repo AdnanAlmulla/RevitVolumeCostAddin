@@ -1,6 +1,6 @@
 # Backlog
 
-Persistent list of work for the Revit Volume & Cost add-in (working name). Items are implementable
+Persistent list of work for the Telltale add-in (working name until 2026-11-27: Revit Volume & Cost). Items are implementable
 cold: read each item's **Where** and **Acceptance** before starting, and follow the repo `CLAUDE.md`
 conventions.
 
@@ -81,6 +81,23 @@ a failed element again at the finer setting and logs each failure's reason. Same
 with Central fired on the cloud model (read 9.0 s), and the uploader delivered all four snapshots once its password
 was corrected. Ruled the same day: shapes ride on every sync (0.6.0, built and checked through the uploader against
 a test copy of the site; the Revit side not yet run).
+
+### [T-001] P3 — Rename the add-in to Telltale, in the next batched release (held)
+<!-- type: tech debt | added: 2026-11-27 -->
+**What:** Set `ProductName` to `Telltale` (`Directory.Build.props`), so the ribbon tab, DLL, `.addin` manifest,
+`%LocalAppData%\<product>\` (Outbox, Logs, Uploader), `%AppData%\<product>\` (`uploader.json`, `addin.json`), the
+Startup shortcut, the uploader's mutex and the package name all follow. The installer must also clear the old name, for
+each Revit year: delete `RevitVolumeCost.addin` and its folder; stop the old uploader and delete its Startup shortcut
+and folder; carry `uploader.json` and `addin.json` across (so the technician is not asked for the password again); move
+unsent files from the old Outbox into the new one. Update the technician sheets to the new tab, files and folders.
+**Why:** The engineer named the product Telltale (2026-11-27). Changing the name beside an installed copy loads two
+add-ins (two snapshots per sync), runs two uploaders and leaves the old outbox unsent.
+**Where:** `Directory.Build.props`, `installer/Install-Addin.ps1`, `docs/technician/*`, `Build-Package.ps1` (reads the name).
+**Acceptance:** On a PC with the old version installed and an unsent snapshot, the installer leaves one add-in, one
+uploader (running, with the old settings) and the snapshot sent; a fresh PC installs as before.
+**Notes:** Held, not a reason for a release by itself (engineer: no new add-in version "unless absolutely necessary";
+batch changes). The website does not care about the add-in's name: a snapshot carries no product name, and its files
+are found by extension. Website repo T-002 tracks the rest of the rename.
 
 ## Done
 

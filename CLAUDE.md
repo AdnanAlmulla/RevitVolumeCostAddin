@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**The Revit add-in of Revit Volume & Cost** (repo `RevitVolumeCostAddin`): a Revit add-in for Revit
+**The Revit add-in of Telltale** (repo `RevitVolumeCostAddin`): a Revit add-in for Revit
 2022–2027 that reads the quantities of a structural model (concrete, steel and other materials) and sends them, as a snapshot, to the
 project's internal website. It also holds the **snapshot classes** (`src/Contracts`) that the website's API
 compiles against.
@@ -12,13 +12,15 @@ compiles against.
 The website (API, database, site) lives in a separate private repo, `RevitVolumeCost`. This repo was split
 off on 2026-11-25 so that Revit-side contributors work here only (engineer's ruling).
 
-**The name is a placeholder** (engineer, 2026-11-25): "Revit Volume & Cost", `RevitVolumeCost` and
-`RevitVolumeCostAddin` are working names; the product's real name is not decided. Keep it cheap to rename:
-put the product name in one MSBuild property (`Directory.Build.props`, `ProductName`) and nowhere else in
-code. The assembly name, the add-in's folder and its `.addin` manifest (written at build time from
+**The name is Telltale** (engineer, 2026-11-27). "Revit Volume & Cost", `RevitVolumeCost` and
+`RevitVolumeCostAddin` were working names. The product name lives in one MSBuild property
+(`Directory.Build.props`, `ProductName`) and nowhere else in code. The assembly name, the add-in's folder and its `.addin` manifest (written at build time from
 `src/Addin/Manifest.addin.template`) derive from it, and the code reads it back from the assembly name. C#
 namespaces are written in source, so they stay neutral (`Addin.*`; `Contracts.*` when it exists) and never
-carry the name.
+carry the name. **`ProductName` is still `RevitVolumeCost`** until the next batched release (backlog T-001): it
+also names the ribbon tab, the DLL and manifest, the outbox, the settings and log folders, the uploader's folder,
+shortcut and mutex, so changing it beside an installed copy would load two add-ins and orphan the outbox. The
+technician sheets describe the installed build, so they keep the old name until that release.
 
 **Who runs what in Revit** (engineer, 2026-11-25): the engineer does not open Revit. The BIM technician
 installs the add-in, fills the parameters, runs Export / Sync and does the per-release check. Every Revit step
@@ -48,7 +50,7 @@ website's `appsettings.json` "Classification"), then has 0.6 tested on a tagged 
 after a sync and their upload; the website side is live. **He does not want to re-issue versions lightly: hold add-in
 changes and batch them into one version.** Models are assumed to be on ACC (engineer, 2026-11-26: the technicians are
 "centralizing to ACC"); the after-sync snapshot skips models not in ACC, as ruled on 2026-11-25. No changes are held
-at the moment.
+at the moment, except the rename to Telltale (T-001).
 
 ## How work lands here
 
