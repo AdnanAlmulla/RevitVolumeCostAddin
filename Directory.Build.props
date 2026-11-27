@@ -1,12 +1,14 @@
 <Project>
   <!--
-    The product's working name lives here and nowhere else in code (engineer, 2026-11-25: the name is a
-    placeholder). The add-in's assembly, its folder and its .addin manifest all take their name from it.
-    C# namespaces are written in source, so they stay neutral ("Addin", "Contracts") and never carry the name.
+    The product's name lives here and nowhere else in code: Telltale (engineer, 2026-11-27; "RevitVolumeCost" until
+    0.6.0). The add-in's assembly, its folder, its .addin manifest, the ribbon tab and every folder and file it and the
+    uploader use take their name from it. C# namespaces are written in source, so they stay neutral ("Addin",
+    "Contracts") and never carry the name. The installer also knows the former names, to clear an old copy away
+    (installer/Move-FormerInstall.ps1).
   -->
   <PropertyGroup>
-    <ProductName>RevitVolumeCost</ProductName>
-    <Version>0.6.0</Version>
+    <ProductName>Telltale</ProductName>
+    <Version>0.7.0</Version>
     <Authors>Adnan Almulla @ Killa Design</Authors>
     <Company>Killa Design</Company>
     <Product>$(ProductName)</Product>

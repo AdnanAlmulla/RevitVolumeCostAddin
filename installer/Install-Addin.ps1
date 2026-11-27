@@ -1,7 +1,8 @@
 # Installs the add-in for each Revit year it was built for and that this computer has.
 #
 # Start it with "Install.cmd" (double-click), with Revit closed. For each year folder beside this script
-# (2024, 2026, ...) whose Revit is installed, it copies:
+# (2024, 2026, ...) whose Revit is installed, it copies (after clearing away a copy installed under a former name,
+# Move-FormerInstall.ps1):
 #     <year>\<product>.addin   to  %AppData%\Autodesk\Revit\Addins\<year>\
 #     <year>\<product>\        to  %AppData%\Autodesk\Revit\Addins\<year>\<product>\
 # replacing an earlier copy. Revit reads .addin files from that folder when it starts.
@@ -39,6 +40,14 @@ if (-not $yearFolders) {
     exit 1
 }
 
+# The product's name, from the package's own manifest (<product>.addin), the same in every year folder.
+$productName = [System.IO.Path]::GetFileNameWithoutExtension((Get-ChildItem -Path $yearFolders[0].FullName -Filter '*.addin' | Select-Object -First 1).Name)
+
+# A copy installed under a former name (RevitVolumeCost before 0.7.0) is removed first, and its settings and unsent
+# snapshots carried over, before the uploader below looks for its settings (see Move-FormerInstall.ps1).
+. (Join-Path $packageFolder 'Move-FormerInstall.ps1')
+Move-FormerInstall -ProductName $productName -RoamingAppDataFolder $env:APPDATA -LocalAppDataFolder $env:LOCALAPPDATA -StartupFolder ([Environment]::GetFolderPath('Startup'))
+
 $installedYearCount = 0
 foreach ($yearFolder in $yearFolders) {
     $revitYear = $yearFolder.Name
@@ -49,7 +58,6 @@ foreach ($yearFolder in $yearFolders) {
     }
 
     $manifest = Get-ChildItem -Path $yearFolder.FullName -Filter '*.addin' | Select-Object -First 1
-    $productName = [System.IO.Path]::GetFileNameWithoutExtension($manifest.Name)
     $sourceAddinFolder = Join-Path $yearFolder.FullName $productName
     $targetYearFolder = Join-Path $addinsRootFolder $revitYear
     $targetAddinFolder = Join-Path $targetYearFolder $productName

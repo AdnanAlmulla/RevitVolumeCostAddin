@@ -45,6 +45,8 @@ foreach ($configuration in $REVIT_YEAR_BY_CONFIGURATION.Keys) {
     # Only our own DLL (and its .pdb, for error line numbers): the add-in carries no third-party files.
     Copy-Item (Join-Path $buildFolder "$productName.dll") $addinFolder
     Copy-Item (Join-Path $buildFolder "$productName.pdb") $addinFolder
+    # The instruction sheet beside the DLL, where the Help button opens it (AddinInfo.InstructionSheetPath).
+    Copy-Item $instructionSheet (Join-Path $addinFolder "$productName instructions.txt")
     $unexpectedFiles = Get-ChildItem $buildFolder -File | Where-Object { $_.Extension -eq '.dll' -and $_.BaseName -ne $productName }
     if ($unexpectedFiles) { throw "The build output holds other DLLs ($($unexpectedFiles.Name -join ', ')); the add-in must carry none." }
 }
@@ -55,6 +57,7 @@ Invoke-Checked 'Build the uploader' { dotnet publish $uploaderProject -c Release
 
 Copy-Item (Join-Path $repositoryFolder 'installer\Install.cmd') $packageFolder
 Copy-Item (Join-Path $repositoryFolder 'installer\Install-Addin.ps1') $packageFolder
+Copy-Item (Join-Path $repositoryFolder 'installer\Move-FormerInstall.ps1') $packageFolder
 # Shipped as .txt: many PCs have no program for .md files.
 Copy-Item $instructionSheet (Join-Path $packageFolder 'READ ME FIRST.txt')
 
