@@ -57,7 +57,7 @@ at the moment beyond 0.7.0.
 
 **Where things stand (2026-11-27):** **0.7.0 is built and committed, not handed out, not run in Revit.** It batches
 0.6.0's untested shapes-after-sync with the rename to Telltale (T-001), ribbon icons for Revit's light and dark themes,
-a Help button, and robustness fixes (below). One technician runs `docs/technician/release-check.md` (shipped in the
+a Help button, Raw dump moved out of sight, sent files kept 90 days, and robustness fixes (below). One technician runs `docs/technician/release-check.md` (shipped in the
 package as "Release check.txt") on a PC with 0.6.0 before it goes to everyone. The shared parameters being agreed with
 the technicians need no add-in release: no parameter name is written in the add-in.
 
@@ -245,8 +245,12 @@ _harnesses/           throwaway probes, never part of a build
   sign-in replaces the password later. **Not yet run on a modeller's PC**, and the installer's uploader steps were
   not run here (they write to the real Startup folder). Its log starts again past 5 MB (keeping
   `uploader.previous.log`), and writing it can never end the uploader. Shapes whose snapshot was refused follow it to
-  `Rejected` (the website would answer 409 to them for ever). `Outbox\Sent` is never emptied (about 1.5 MB per sync).
-- **The ribbon** (0.7.0): tab `<product>`, panels Quantities (Sync to website, Raw dump) and Help. The after-sync
+  `Rejected` (the website would answer 409 to them for ever). `Outbox\Sent` keeps a file 90 days after it was sent
+  (engineer, 2026-11-27; the website keeps its own copy of every file in `%LocalAppData%\Telltale\Snapshots` and
+  `Shapes` on the host PC); the uploader stamps the sending time on the file and deletes older ones at each pass.
+  `Rejected` is never emptied.
+- **The ribbon** (0.7.0): tab `<product>`, panels Quantities (Sync to website; Raw dump in the panel's slide-out, out of sight, engineer
+  2026-11-27) and Help. The after-sync
   handler is hooked up before the ribbon is built, and the ribbon is built inside a try, so nothing on it can cost a
   snapshot. Icons: one flat colour per theme, chosen from `UIThemeManager.CurrentTheme` and swapped on `ThemeChanged`
   (both in the 2024 and 2026 API; called from `NoInlining` methods inside a try). **Help** works with no model open

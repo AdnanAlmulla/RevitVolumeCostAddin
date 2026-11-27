@@ -57,7 +57,10 @@ namespace Addin
             {
                 ToolTip = "Takes a snapshot of this model's quantities now and leaves it for the uploader to send. Changes nothing in the model.",
             });
-            AddButton(quantitiesPanel, "rawdump", new PushButtonData("RawDump", "Raw\ndump", AddinInfo.AssemblyPath, typeof(RawDumpCommand).FullName)
+            // Raw dump is for checking only, so it waits in the panel's drop-down (the arrow beside "Quantities"), out of
+            // sight until asked for (engineer, 2026-11-27).
+            quantitiesPanel.AddSlideOut();
+            AddButton(quantitiesPanel, "rawdump",new PushButtonData("RawDump", "Raw\ndump", AddinInfo.AssemblyPath, typeof(RawDumpCommand).FullName)
             {
                 ToolTip = "Writes every element with all its parameters to one file, for checking. Changes nothing in the model.",
             });

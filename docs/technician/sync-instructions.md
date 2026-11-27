@@ -32,12 +32,14 @@ The first time on a PC, get two things from Adnan: the **website address** and t
 Synchronize with Central as you always do. On the **Telltale** tab:
 
 - **Sync to website** takes a snapshot now, on any project model (a detached copy too).
-- **Raw dump** writes every element with all its parameters to one file, for checking. Use it only when Adnan asks.
+- **Raw dump** writes every element with all its parameters to one file, for checking. Use it only when Adnan asks. It
+  is out of sight: click the small arrow beside the **Quantities** panel's name to show it.
 - **Help** shows the add-in's version, whether this PC takes the snapshot after each sync, and how many snapshots are
   still **waiting to be sent**. From there you can open the website, this sheet, the outbox folder and the logs folder.
 
 After each sync two files appear in the outbox, `%LocalAppData%\Telltale\Outbox`, one ending in **.snapshot.json.gz**
-and one in **.shapes.json.gz**. Within a minute the uploader moves them to the **Sent** folder beside them.
+and one in **.shapes.json.gz**. Within a minute the uploader moves them to the **Sent** folder beside them, which keeps
+them for 90 days (the website keeps its own copy) and then deletes them.
 
 ## 3. If something seems wrong
 

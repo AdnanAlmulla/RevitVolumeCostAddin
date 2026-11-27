@@ -26,8 +26,9 @@ files listed at the end.
 ## C. The ribbon, in Revit 2026
 
 6. Start Revit 2026 with **no model open**. **Expected:** one question about an unsigned add-in, naming Telltale
-   (choose Always Load); a **Telltale** tab with **Sync to website**, **Raw dump** and **Help**, each with an icon; no
-   RevitVolumeCost tab. Take a screenshot of the tab.
+   (choose Always Load); a **Telltale** tab with **Sync to website** and **Help**, each with an icon; no RevitVolumeCost
+   tab. Click the small arrow beside the **Quantities** panel's name: **Raw dump** shows, with its icon. Take a
+   screenshot of the tab with the arrow opened.
 7. Switch Revit to the dark theme (File > Options > Colors, the theme setting: Dark > OK; the wording may differ a
    little, as this path was not checked in Revit). **Expected:** the icons turn
    light and stay easy to see. Take a screenshot, then switch back to Light.

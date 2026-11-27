@@ -73,6 +73,11 @@ while (true)
 
 async Task SendOutboxAsync()
 {
+    int expiredCount = UploadRules.DeleteExpiredSentFiles(sentFolder, DateTime.UtcNow);
+    if (expiredCount > 0)
+    {
+        Log($"deleted {expiredCount} files sent more than {UploadRules.SENT_FILE_KEEPING_DAYS} days ago from {sentFolder}");
+    }
     string siteAddress = ArgumentAfter("--site") ?? ReadSetting(settingsPath, "siteAddress") ?? DEFAULT_SITE_ADDRESS;
     string? sitePassword = ReadSetting(settingsPath, "sitePassword");
     string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
@@ -126,7 +131,9 @@ async Task SendAsync(HttpClient client, string filePath, string uploadPath)
     switch (outcome)
     {
         case UploadOutcome.Delivered:
-            File.Move(filePath, Path.Combine(sentFolder, fileName), overwrite: true);
+            string sentPath = Path.Combine(sentFolder, fileName);
+            File.Move(filePath, sentPath, overwrite: true);
+            UploadRules.MarkAsSent(sentPath, DateTime.UtcNow);
             Log($"sent {fileName} to {client.BaseAddress}");
             break;
         case UploadOutcome.Rejected:

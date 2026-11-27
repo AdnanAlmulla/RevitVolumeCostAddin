@@ -2,6 +2,34 @@
 
 Full records of landed `BACKLOG.md` items, newest first.
 
+## [T-002] How long Outbox\Sent keeps sent files
+<!-- type: tech debt | added: 2026-11-27 -->
+**What:** The uploader moves every sent snapshot and shapes file to `%LocalAppData%\<product>\Outbox\Sent` and never
+deletes them. Proposal: delete files there older than a set age (90 days suggested) at the start of each pass.
+**Why:** About 1.5 MB per sync (0.3–0.6 MB snapshot, about 1.2 MB shapes, 6,000-element tower). At 10 syncs a day that is
+about 15 MB a day, roughly 4 GB a year per modeller's PC. Against it: while the website has no backups, Sent is the only
+second copy of the data, so deleting it is a real loss.
+**Where:** `src/Uploader/Program.cs` (a pruning step in `SendOutboxAsync`), the rule pure and tested in `UploadRules.cs`.
+**Acceptance:** The engineer picks an age, or rules to keep everything; files older than it are gone after the next pass
+and younger ones are untouched (tested with a temporary folder).
+**Notes:** Not built: deleting data on technicians' PCs is the engineer's decision. Ships only in a batched release.
+**Result (2026-11-27):** The engineer chose 90 days, once told the website keeps its own copy of each file ("Then I
+agree: 90 days after it can be deleted"). Built into 0.7.0: `UploadRules.DeleteExpiredSentFiles` and `MarkAsSent` (the
+uploader stamps the sending time as it moves a file into Sent), run at the start of each pass; tested with a temporary
+folder (91 days deleted, 89 days and today kept). Not run on a modeller's PC.
+
+## [T-003] Raw dump out of sight on the ribbon
+<!-- type: tech debt | added: 2026-11-27 -->
+**What:** Raw dump (F-004) was a one-off for the parameter standard, and it sits beside Sync to website on every
+modeller's ribbon. Options: keep it; move it to the Quantities panel's slide-out (`RibbonPanel.AddSlideOut()`), out of
+sight until asked for; or remove it.
+**Why:** A button that is not for daily use invites clicks, and a raw dump of a large tower holds Revit for minutes.
+**Where:** `src/Addin/App.cs` (`AddRibbon`), the technician sheets.
+**Acceptance:** The engineer's choice, in the next batched release.
+**Result (2026-11-27):** The engineer chose the slide-out ("move it out of sight into the panel's drop-down"). Built
+into 0.7.0 (`RibbonPanel.AddSlideOut()` before Raw dump); compiles for 2024 and 2026, not yet seen in Revit (release check
+step 6).
+
 ## [F-002] Division, element-kind and concrete-grade conventions
 Landed 2026-11-26: the engineer approved a parameter standard (shared Text instance parameters for division, RC or PT,
 wall function and concrete and steel grade, with exact allowed values). It lives in the private website repo

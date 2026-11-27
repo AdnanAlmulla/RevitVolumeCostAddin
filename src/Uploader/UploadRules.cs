@@ -1,4 +1,6 @@
 // Pure code: compiled into tests/Addin.Tests by path.
+using System;
+using System.IO;
 using System.Net;
 
 namespace Uploader
@@ -19,6 +21,51 @@ namespace Uploader
         // (src/Addin/Snapshots/SnapshotOutbox.cs, src/Addin/Shapes/ShapeFile.cs).
         public const string SNAPSHOT_FILE_EXTENSION = ".snapshot.json.gz";
         public const string SHAPES_FILE_EXTENSION = ".shapes.json.gz";
+
+        // How long Outbox\Sent keeps a file after it was sent (engineer, 2026-11-27: "90 days after it can be deleted").
+        // The website keeps its own copy of every file it takes in, so this copy is a spare. Rejected is never emptied.
+        public const int SENT_FILE_KEEPING_DAYS = 90;
+
+        /// <summary>
+        /// Deletes the files in Outbox\Sent sent more than SENT_FILE_KEEPING_DAYS before <paramref name="nowUtc"/>, and
+        /// returns how many. A file's sending time is its last-write time, which the uploader sets as it moves the file
+        /// into Sent (MarkAsSent). A file that can't be deleted now is left for a later pass.
+        /// </summary>
+        public static int DeleteExpiredSentFiles(string sentFolder, DateTime nowUtc)
+        {
+            if (!Directory.Exists(sentFolder))
+            {
+                return 0;
+            }
+            DateTime oldestKeptSentAtUtc = nowUtc.AddDays(-SENT_FILE_KEEPING_DAYS);
+            int deletedCount = 0;
+            foreach (string sentPath in Directory.GetFiles(sentFolder))
+            {
+                DateTime sentAtUtc = File.GetLastWriteTimeUtc(sentPath);
+                if (sentAtUtc >= oldestKeptSentAtUtc)
+                {
+                    continue;
+                }
+                try
+                {
+                    File.Delete(sentPath);
+                    deletedCount++;
+                }
+                catch (IOException)
+                {
+                }
+                catch (UnauthorizedAccessException)
+                {
+                }
+            }
+            return deletedCount;
+        }
+
+        /// <summary>Stamps a file just moved into Sent with the time it was sent, which DeleteExpiredSentFiles counts from.</summary>
+        public static void MarkAsSent(string sentPath, DateTime nowUtc)
+        {
+            File.SetLastWriteTimeUtc(sentPath, nowUtc);
+        }
 
         /// <summary>
         /// The file name of the snapshot a shapes file belongs to. When the website refused that snapshot, it answers 409

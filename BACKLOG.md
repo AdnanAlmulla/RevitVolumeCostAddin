@@ -108,31 +108,13 @@ already present, `-WhatIf`, a second run, a fresh PC, old folders held open so t
 process for the old uploader; a `-WhatIf` run of the packaged installer on the engineer's PC
 went through. Technician sheets updated (`sync-instructions.md`, and `release-check.md` section A–B for this item).
 Same batch: ribbon icons for both themes, a Help button, a failed Sync to website said plainly, the ribbon can't cost the
-after-sync snapshot, the uploader's log bounded and unable to end it, refused snapshots' shapes stop retrying.
+after-sync snapshot, the uploader's log bounded and unable to end it, refused snapshots' shapes stop retrying, sent
+files kept 90 days (T-002), Raw dump in the panel's slide-out (T-003).
 Still to do: the technician's release check on a PC with 0.6.0 (the acceptance above).
-
-### [T-002] P3 — Decide how long Outbox\Sent keeps sent files (proposed, engineer's call)
-<!-- type: tech debt | added: 2026-11-27 -->
-**What:** The uploader moves every sent snapshot and shapes file to `%LocalAppData%\<product>\Outbox\Sent` and never
-deletes them. Proposal: delete files there older than a set age (90 days suggested) at the start of each pass.
-**Why:** About 1.5 MB per sync (0.3–0.6 MB snapshot, about 1.2 MB shapes, 6,000-element tower). At 10 syncs a day that is
-about 15 MB a day, roughly 4 GB a year per modeller's PC. Against it: while the website has no backups, Sent is the only
-second copy of the data, so deleting it is a real loss.
-**Where:** `src/Uploader/Program.cs` (a pruning step in `SendOutboxAsync`), the rule pure and tested in `UploadRules.cs`.
-**Acceptance:** The engineer picks an age, or rules to keep everything; files older than it are gone after the next pass
-and younger ones are untouched (tested with a temporary folder).
-**Notes:** Not built: deleting data on technicians' PCs is the engineer's decision. Ships only in a batched release.
-
-### [T-003] P3 — Whether Raw dump stays on the ribbon (proposed, engineer's call)
-<!-- type: tech debt | added: 2026-11-27 -->
-**What:** Raw dump (F-004) was a one-off for the parameter standard, and it sits beside Sync to website on every
-modeller's ribbon. Options: keep it; move it to the Quantities panel's slide-out (`RibbonPanel.AddSlideOut()`), out of
-sight until asked for; or remove it.
-**Why:** A button that is not for daily use invites clicks, and a raw dump of a large tower holds Revit for minutes.
-**Where:** `src/Addin/App.cs` (`AddRibbon`), the technician sheets.
-**Acceptance:** The engineer's choice, in the next batched release.
 
 ## Done
 
 - [[F-002]](docs/backlog-archive.md#f-002-division-element-kind-and-concrete-grade-conventions) Conventions agreed: a parameter standard the technicians follow — 2026-11-26
+- [[T-002]](docs/backlog-archive.md#t-002-how-long-outboxsent-keeps-sent-files) Sent files kept 90 days, then deleted (0.7.0) — 2026-11-27
+- [[T-003]](docs/backlog-archive.md#t-003-raw-dump-out-of-sight-on-the-ribbon) Raw dump moved to the Quantities panel's slide-out (0.7.0) — 2026-11-27
 - [[F-004]](docs/backlog-archive.md#f-004-raw-dump-of-a-real-tower) Raw dump of a real tower: ran, matched Revit's takeoff, snapshot classes v1 written from it — 2026-11-26

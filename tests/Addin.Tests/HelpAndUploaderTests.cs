@@ -76,6 +76,46 @@ namespace Addin.Tests
         }
 
         [Fact]
+        public void Sent_files_are_deleted_only_after_90_days()
+        {
+            string sentFolder = Path.Combine(Path.GetTempPath(), "sent-test-" + Guid.NewGuid().ToString("N"));
+            Directory.CreateDirectory(sentFolder);
+            var nowUtc = new DateTime(2026, 11, 27, 6, 0, 0, DateTimeKind.Utc);
+            string sent91DaysAgo = Path.Combine(sentFolder, "a" + SnapshotOutbox.SNAPSHOT_FILE_EXTENSION);
+            string sent89DaysAgo = Path.Combine(sentFolder, "b" + SnapshotOutbox.SNAPSHOT_FILE_EXTENSION);
+            string sentToday = Path.Combine(sentFolder, "c" + ShapeFile.FILE_EXTENSION);
+            try
+            {
+                foreach (string path in new[] { sent91DaysAgo, sent89DaysAgo, sentToday })
+                {
+                    File.WriteAllText(path, "");
+                }
+                UploadRules.MarkAsSent(sent91DaysAgo, nowUtc.AddDays(-91));
+                UploadRules.MarkAsSent(sent89DaysAgo, nowUtc.AddDays(-89));
+                UploadRules.MarkAsSent(sentToday, nowUtc);
+
+                int deletedCount = UploadRules.DeleteExpiredSentFiles(sentFolder, nowUtc);
+
+                Assert.Equal(1, deletedCount);
+                Assert.False(File.Exists(sent91DaysAgo));
+                Assert.True(File.Exists(sent89DaysAgo));
+                Assert.True(File.Exists(sentToday));
+            }
+            finally
+            {
+                Directory.Delete(sentFolder, recursive: true);
+            }
+        }
+
+        [Fact]
+        public void A_missing_sent_folder_deletes_nothing()
+        {
+            string missingFolder = Path.Combine(Path.GetTempPath(), "no-sent-" + Guid.NewGuid().ToString("N"));
+
+            Assert.Equal(0, UploadRules.DeleteExpiredSentFiles(missingFolder, DateTime.UtcNow));
+        }
+
+        [Fact]
         public void The_uploader_and_the_add_in_agree_on_the_file_names()
         {
             Assert.Equal(SnapshotOutbox.SNAPSHOT_FILE_EXTENSION, UploadRules.SNAPSHOT_FILE_EXTENSION);
