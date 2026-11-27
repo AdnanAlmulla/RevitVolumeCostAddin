@@ -55,7 +55,12 @@ changes and batch them into one version.** Models are assumed to be on ACC (engi
 "centralizing to ACC"); the after-sync snapshot skips models not in ACC, as ruled on 2026-11-25. No changes are held
 at the moment beyond 0.7.0.
 
-**Where things stand (2026-11-27):** **0.7.0 is built and committed, not handed out, not run in Revit.** It batches
+**Where things stand (2026-11-27, afternoon):** a technician runs **0.7.0** in Revit (Help opened; engineer, 11:24 UTC).
+Adnan published the test **0.7.1** on the website at 11:19 UTC. **0.7.2 is built and committed, not published**: Help's
+**Check for updates** (the uploader checks at once and answers in plain words), a check right after each snapshot is
+sent, the background check still hourly (engineer: "every hour please. With the other checks its fine"), and Help's
+outbox and logs links merged into one "Show the Telltale folder". Adnan publishes it with the website's "Publish
+add-in.cmd"; release check section F follows it on the technician's PC. Earlier the same day, **0.7.0 was built**. It batches
 0.6.0's untested shapes-after-sync with the rename to Telltale (T-001), ribbon icons for Revit's light and dark themes,
 a Help button, a Parameter standard window, **updates through the uploader** (below), Raw dump moved out of sight, sent
 files kept 90 days, and robustness fixes (below). **0.7.0 is meant to be the last zip handed out** (engineer, 2026-11-27):
@@ -203,7 +208,8 @@ src/Addin/            Revit add-in, configurations R24 and R26 (others when need
   App.cs              starts with Revit: the snapshot after each Synchronize with Central, then the ribbon tab
   Commands/           SyncCommand (Sync to website), ParameterStandardCommand, RawDumpCommand, HelpCommand; all read-only
   Standard/           ParameterStandard, StandardContent (pure, tested; the website's tests compile both); ParameterStandardWindow (WPF, in code)
-  Updates/            ReleaseVersions (pure, tested; the uploader compiles it too); UpdateNotice: the "restart Revit" note
+  Updates/            ReleaseVersions, UpdateCheckFiles (pure, tested; the uploader compiles both); UpdateNotice: the
+                      "restart Revit" note; CheckForUpdatesWindow: Help's "Check for updates"
   Ribbon/, Resources/ RibbonIcons loads the icons embedded from Resources/Icons (light and dark, 32 and 16 px)
   UploaderSettingsFile.cs, AddinSettings.cs   pure: the website's address for Help; the after-sync switch
   Shapes/             ShapeOutbox and ShapeReader (Revit); ShapeMesh and ShapeFile (pure, tested): the "shapes-1" file
@@ -274,14 +280,19 @@ _harnesses/           throwaway probes, never part of a build
   (both in the 2024 and 2026 API; called from `NoInlining` methods inside a try). **Help** works with no model open
   (`AlwaysAvailable`): version, the after-sync switch, snapshots still waiting in the outbox, and links to the website
   (`siteAddress` from `uploader.json`; the add-in never reads the password), the instruction sheet installed beside the
-  DLL as `<product> instructions.txt`, the outbox and the logs. A failed Sync to website is logged and said in a plain
+  DLL as `<product> instructions.txt`, **Check for updates** (0.7.2) and `%LocalAppData%\<product>` (Outbox and Logs;
+  a TaskDialog holds four links at most). A failed Sync to website is logged and said in a plain
   dialog.
 - **Updates** (engineer, 2026-11-27: "new version of Telltale Addin ready, restart Revit please"; Adnan decides when a
   version is released by publishing its zip on the website, website repo "Publish add-in.cmd"). Each version lives in
   its own folder, `Addins\<year>\<product>\<version>\` and `%LocalAppData%\<product>\Uploader\<version>\`, and the
   manifest's Assembly path names it (`Manifest.addin.template`, `$Version$`). The uploader (`UpdateCheck`) asks
-  `GET /api/addin/latest` ({version, sha256, size, releasedAt}; 404 when none) at start and hourly, with the site
-  password; for a newer version it downloads `/api/addin/download/{version}` (the zip exactly as `Build-Package.ps1`
+  `GET /api/addin/latest` ({version, sha256, size, releasedAt}; 404 when none) with the site password, at start, hourly,
+  right after a snapshot is sent, and at once when Help's **Check for updates** asks (0.7.2: the add-in writes
+  `%LocalAppData%\<product>\update-check.request` holding a new id, a `FileSystemWatcher` wakes the uploader, which
+  answers in `update-check.result`: the id, an outcome and a sentence, `UpdateCheckFiles`; `CheckForUpdatesWindow` waits up
+  to a minute without freezing Revit and shows the answer, the "restart Revit please" sentence when a version was
+  installed); for a newer version it downloads `/api/addin/download/{version}` (the zip exactly as `Build-Package.ps1`
   writes it), checks size and SHA-256, unpacks it under a temporary name, copies the version folder beside the running
   one for each Revit year whose manifest exists (never adds a year), then replaces the manifest in one step: Revit reads
   it only at start, so the next start loads the new version even while this session holds the old DLL. The version
@@ -295,9 +306,10 @@ _harnesses/           throwaway probes, never part of a build
   (version, date, each parameter with a name, values and categories), else the built-in copy. `Build-Package.ps1
   -Version x.y.z` builds a test release. The folder overrides never touch the registry; `--once` never hands over. The
   update check runs after the outbox is sent, so a bad release can't hold snapshots back. **Checked:** unit tests, and
-  `tests/Updates/Test-UpdateEndToEnd.ps1` (real 0.7.0 uploaders against a stand-in site offering a 0.7.1 test package,
-  scratch folders: 21 checks, including a running uploader handing over to 0.7.1, a corrupted download and a site that is
-  down). **Not checked:** anything in Revit (the note, a version-folder manifest path, loading the new version), the Run
+  `tests/Updates/Test-UpdateEndToEnd.ps1 -From -To` (real uploaders against a stand-in site, scratch folders): 0.7.0 to
+  0.7.2, 21 checks (a running uploader handing over, a corrupted download, a site that is down); 0.7.2 to a 0.7.3 test
+  package, 25 checks, Check for updates answering "up to date" in 0.3 s and "installed" in 0.5 s. Not trialled: the check
+  right after a sent snapshot (the stand-in site takes no uploads). **Not checked:** anything in Revit (the note, a version-folder manifest path, loading the new version), the Run
   entry (it acts on the real registry), the real installer beyond `-WhatIf`, and antivirus. The hash proves the download is whole, not who made it: the site is plain http and the
   files are unsigned. A PC without .NET 8 has no uploader, so no updates.
 - The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.

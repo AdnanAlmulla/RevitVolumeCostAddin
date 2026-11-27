@@ -213,6 +213,41 @@ namespace Addin.Tests
         }
 
         [Fact]
+        public void The_uploaders_answer_reads_back_for_the_request_that_asked()
+        {
+            Guid requestId = Guid.NewGuid();
+            string resultText = UpdateCheckFiles.FormatResult(requestId, UpdateCheckOutcome.Installed, "Version 0.7.2 is installed\nand starts next time.");
+
+            bool isRead = UpdateCheckFiles.TryReadResult(resultText, requestId, out UpdateCheckOutcome outcome, out string message);
+
+            Assert.True(isRead);
+            Assert.Equal(UpdateCheckOutcome.Installed, outcome);
+            Assert.Equal("Version 0.7.2 is installed and starts next time.", message);
+        }
+
+        [Fact]
+        public void An_answer_to_another_request_or_a_broken_one_is_not_read()
+        {
+            Guid requestId = Guid.NewGuid();
+            string otherAnswer = UpdateCheckFiles.FormatResult(Guid.NewGuid(), UpdateCheckOutcome.UpToDate, "Up to date.");
+
+            Assert.False(UpdateCheckFiles.TryReadResult(otherAnswer, requestId, out _, out _));
+            Assert.False(UpdateCheckFiles.TryReadResult(null, requestId, out _, out _));
+            Assert.False(UpdateCheckFiles.TryReadResult(requestId + "\nNotAnOutcome\nText", requestId, out _, out _));
+            Assert.False(UpdateCheckFiles.TryReadResult(requestId + "\nUpToDate", requestId, out _, out _));
+        }
+
+        [Fact]
+        public void A_request_holds_its_id()
+        {
+            Guid requestId = Guid.NewGuid();
+
+            Assert.Equal(requestId, UpdateCheckFiles.ReadRequest(requestId.ToString("D") + "\r\n"));
+            Assert.Null(UpdateCheckFiles.ReadRequest("not an id"));
+            Assert.Null(UpdateCheckFiles.ReadRequest(null));
+        }
+
+        [Fact]
         public void The_built_in_standard_says_it_is_not_the_websites()
         {
             Assert.False(ParameterStandard.BuiltIn.IsFromWebsite);

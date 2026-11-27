@@ -17,5 +17,6 @@
   <ItemGroup>
     <!-- Release numbers and the manifest's version folder, read with the same code as the add-in's. -->
     <Compile Include="..\Addin\Updates\ReleaseVersions.cs" Link="Shared\ReleaseVersions.cs" />
+    <Compile Include="..\Addin\Updates\UpdateCheckFiles.cs" Link="Shared\UpdateCheckFiles.cs" />
   </ItemGroup>
 </Project>

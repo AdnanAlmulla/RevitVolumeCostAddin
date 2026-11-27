@@ -153,6 +153,11 @@ for the endpoints and "Publish add-in.cmd". CLAUDE.md "Updates" has the design.
 **Acceptance:** On a technician's PC with 0.7.0, a published test 0.7.1 is installed by itself, the note shows once in an
 open Revit, the next Revit start runs 0.7.1, the uploader runs from `Uploader\0.7.1` and starts from there at sign-in
 (release check section F).
+**Progress (2026-11-27, afternoon):** A technician runs 0.7.0 in Revit (Help opened). Adnan published the test 0.7.1 at
+11:19 UTC (checked: the download serves the same bytes). He then found the hourly wait too long when he wants a version
+out now, so 0.7.2 adds Help's Check for updates (request and result files beside the outbox; the uploader wakes at once)
+and a check right after each sent snapshot; the background check stays hourly (engineer). Trials: 0.7.0 to 0.7.2 (21
+checks), 0.7.2 to a 0.7.3 test (25 checks, answers in under a second). Built, not published; Adnan publishes it.
 **Progress (2026-11-27):** Built and committed. 23 new unit tests; `tests/Updates/Test-UpdateEndToEnd.ps1` passed (real
 0.7.0 uploaders against a stand-in site offering a 0.7.1 test package, scratch folders, 21 checks: manifest repointed, old
 version kept, Revit 2024 left alone when not installed, uploader staged, standard saved, a second run idle, a running

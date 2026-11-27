@@ -7,10 +7,12 @@ using Microsoft.Win32;
 namespace Uploader
 {
     /// <summary>
-    /// Asks the website, when the uploader starts and then hourly, for the newest add-in release and for the parameter
-    /// standard (engineer, 2026-11-27: updates arrive through the uploader, and Adnan decides when a version is released
-    /// by publishing it on the website). A newer release is checked and installed by AddinUpdates; the add-in then tells
-    /// the technician to restart Revit. The website's endpoints, agreed 2026-11-27:
+    /// Asks the website for the newest add-in release and for the parameter standard (engineer, 2026-11-27: updates arrive
+    /// through the uploader, and Adnan decides when a version is released by publishing it on the website): when the
+    /// uploader starts, every hour, right after a snapshot is sent, and at once when the Help button's "Check for
+    /// updates" asks (UpdateCheckFiles; 0.7.2, after the engineer found an hour's wait too long to roll a version out). A
+    /// newer release is checked and installed by AddinUpdates; the add-in then tells the technician to restart Revit. The
+    /// website's endpoints, agreed 2026-11-27:
     ///   GET /api/addin/latest              {"version","sha256","size","releasedAt"}, or 404 when nothing is published
     ///   GET /api/addin/download/{version}  the package zip as Build-Package.ps1 writes it
     ///   GET /api/parameter-standard        the standard as JSON (see src/Addin/Standard/StandardContent.cs), or 404
@@ -22,6 +24,8 @@ namespace Uploader
         private const string DOWNLOAD_PATH = "/api/addin/download/";
         private const string PARAMETER_STANDARD_PATH = "/api/parameter-standard";
         private const string STARTUP_REGISTRY_KEY = @"Software\Microsoft\Windows\CurrentVersion\Run";
+        // Hourly in the background (engineer, 2026-11-27: "every hour please. With the other checks its fine"); the check
+        // after each sent snapshot and Help's "Check for updates" bring an update in sooner.
         private static readonly TimeSpan TIME_BETWEEN_CHECKS = TimeSpan.FromHours(1);
         // How long a newly started uploader must stay running before the old one leaves it the work.
         private static readonly TimeSpan NEW_UPLOADER_PROOF_TIME = TimeSpan.FromSeconds(10);
@@ -57,9 +61,18 @@ namespace Uploader
 
         private string StartupEntryName => productName + " uploader";
 
-        public async Task RunWhenDueAsync(HttpClient http)
+        private string RequestPath => Path.Combine(localProductFolder, UpdateCheckFiles.REQUEST_FILE_NAME);
+
+        private string ResultPath => Path.Combine(localProductFolder, UpdateCheckFiles.RESULT_FILE_NAME);
+
+        /// <summary>
+        /// Checks when the interval has passed, when <paramref name="isSnapshotSent"/> (a sync just went out: the technician
+        /// is at work), or when the Help button has asked; then answers the Help button with the outcome.
+        /// </summary>
+        public async Task RunWhenDueAsync(HttpClient http, bool isSnapshotSent)
         {
-            if (DateTime.UtcNow < nextCheckUtc)
+            Guid? requestId = TakeRequest();
+            if (DateTime.UtcNow < nextCheckUtc && !isSnapshotSent && requestId == null)
             {
                 return;
             }
@@ -70,16 +83,79 @@ namespace Uploader
             }
             catch (Exception exception)
             {
-                log($"parameter standard: not received, trying again in an hour: {exception.GetType().Name}: {exception.Message}");
+                log($"parameter standard: not received, trying again at the next check: {exception.GetType().Name}: {exception.Message}");
             }
+            KeyValuePair<UpdateCheckOutcome, string> outcome;
             try
             {
-                await InstallNewerReleaseAsync(http);
+                outcome = await InstallNewerReleaseAsync(http, requestId);
+            }
+            catch (HttpRequestException exception)
+            {
+                bool isPasswordRefused = exception.StatusCode == HttpStatusCode.Unauthorized || exception.StatusCode == HttpStatusCode.Forbidden;
+                outcome = exception.StatusCode == null
+                    ? new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Unreachable, $"Could not reach the website at {http.BaseAddress}.")
+                    : isPasswordRefused
+                        ? new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Refused, "The website refused this PC's site password (in uploader.json).")
+                        : new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Failed, $"The website answered {(int)exception.StatusCode}.");
+                log($"update: failed, trying again at the next check: {exception.Message}");
+            }
+            catch (TaskCanceledException)
+            {
+                outcome = new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Unreachable, $"The website at {http.BaseAddress} did not answer in time.");
+                log("update: failed, trying again at the next check: the website did not answer in time");
             }
             catch (Exception exception)
             {
-                log($"update: failed, trying again in an hour: {exception.GetType().Name}: {exception.Message}");
+                outcome = new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Failed, $"The check failed: {exception.Message}");
+                log($"update: failed, trying again at the next check: {exception.GetType().Name}: {exception.Message}");
             }
+            WriteResult(requestId, outcome);
+        }
+
+        /// <summary>The Help button's request, if one is waiting: its id, after removing the file.</summary>
+        private Guid? TakeRequest()
+        {
+            try
+            {
+                if (!File.Exists(RequestPath))
+                {
+                    return null;
+                }
+                Guid? requestId = UpdateCheckFiles.ReadRequest(File.ReadAllText(RequestPath));
+                File.Delete(RequestPath);
+                if (requestId != null)
+                {
+                    log("update: checking now, as asked from Help");
+                }
+                return requestId;
+            }
+            catch (IOException)
+            {
+                // Still being written: taken at the next pass, moments later.
+                return null;
+            }
+        }
+
+        /// <summary>Answers the Help button (when it asked), written whole under a temporary name.</summary>
+        private void WriteResult(Guid? requestId, KeyValuePair<UpdateCheckOutcome, string> outcome)
+        {
+            if (requestId == null)
+            {
+                return;
+            }
+            Directory.CreateDirectory(localProductFolder);
+            string temporaryPath = ResultPath + ".partial";
+            File.WriteAllText(temporaryPath, UpdateCheckFiles.FormatResult(requestId.Value, outcome.Key, outcome.Value));
+            File.Move(temporaryPath, ResultPath, overwrite: true);
+        }
+
+        /// <summary>The newest add-in version installed for any Revit year here, for the "up to date" sentence.</summary>
+        private string InstalledVersionText()
+        {
+            Version? newestInstalled = AddinUpdates.InstalledVersions(addinsRootFolder, productName).Values
+                .Where(version => version != null).Max();
+            return (newestInstalled ?? RunningVersion)?.ToString() ?? "unknown";
         }
 
         /// <summary>Saves the website's standard for the Parameter standard window, when it is complete and has changed.</summary>
@@ -114,12 +190,13 @@ namespace Uploader
             log($"parameter standard: saved the website's copy to {standardPath}");
         }
 
-        private async Task InstallNewerReleaseAsync(HttpClient http)
+        private async Task<KeyValuePair<UpdateCheckOutcome, string>> InstallNewerReleaseAsync(HttpClient http, Guid? requestId)
         {
+            var upToDate = new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.UpToDate, $"{productName} is up to date ({InstalledVersionText()}).");
             using HttpResponseMessage latestResponse = await http.GetAsync(LATEST_RELEASE_PATH);
             if (latestResponse.StatusCode == HttpStatusCode.NotFound)
             {
-                return;
+                return upToDate;
             }
             latestResponse.EnsureSuccessStatusCode();
             using JsonDocument latest = JsonDocument.Parse(await latestResponse.Content.ReadAsStringAsync());
@@ -130,7 +207,7 @@ namespace Uploader
             if (latestVersion == null || latestVersion.ToString() != versionText.Trim())
             {
                 log($"update: the website's latest version \"{versionText}\" is not major.minor.patch; ignored");
-                return;
+                return new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Failed, $"The website offers a version this PC can't read (\"{versionText}\").");
             }
 
             Dictionary<string, Version?> installedAddins = AddinUpdates.InstalledVersions(addinsRootFolder, productName);
@@ -138,7 +215,7 @@ namespace Uploader
             bool isUploaderOlder = ReleaseVersions.IsNewer(latestVersion, RunningVersion) && latestVersion != uploaderVersionThatFailedToStart;
             if (!isAddinOlder && !isUploaderOlder)
             {
-                return;
+                return upToDate;
             }
 
             string updatesFolder = Path.Combine(localProductFolder, "Updates");
@@ -156,19 +233,23 @@ namespace Uploader
                 {
                     File.Delete(temporaryZipPath);
                     log($"update: the download of {latestVersion} does not match its size and checksum; nothing installed");
-                    return;
+                    return new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Failed, $"The download of {latestVersion} arrived damaged, so nothing was installed. Try again.");
                 }
                 File.Move(temporaryZipPath, zipPath, overwrite: true);
             }
             string packageFolder = Path.Combine(updatesFolder, latestVersion.ToString());
             AddinUpdates.Unpack(zipPath, packageFolder);
 
+            KeyValuePair<UpdateCheckOutcome, string> outcome = upToDate;
             if (isAddinOlder)
             {
                 List<string> updatedYears = AddinUpdates.InstallAddin(packageFolder, addinsRootFolder, productName, latestVersion);
                 log(updatedYears.Count > 0
                     ? $"update: add-in {latestVersion} installed for Revit {string.Join(", ", updatedYears)}; it starts at the next Revit start"
                     : $"update: add-in {latestVersion} has no build for the Revit years installed here");
+                outcome = updatedYears.Count > 0
+                    ? new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Installed, $"Version {latestVersion} is installed and starts the next time Revit starts.")
+                    : new KeyValuePair<UpdateCheckOutcome, string>(UpdateCheckOutcome.Failed, $"Version {latestVersion} has no build for the Revit years on this PC.");
             }
             if (isUploaderOlder)
             {
@@ -176,9 +257,12 @@ namespace Uploader
                 string? newUploaderPath = AddinUpdates.InstallUploader(packageFolder, Path.Combine(localProductFolder, "Uploader"), programFileName, latestVersion);
                 if (newUploaderPath != null)
                 {
+                    // Answer Help before handing over: this copy may end within seconds.
+                    WriteResult(requestId, outcome);
                     HandOverTo(newUploaderPath, latestVersion);
                 }
             }
+            return outcome;
         }
 
         /// <summary>

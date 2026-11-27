@@ -1,4 +1,4 @@
-# Telltale add-in 0.7: instructions for the BIM technicians
+# Telltale add-in 0.7.2: instructions for the BIM technicians
 
 **New in 0.7:** the add-in is now called **Telltale** (it was RevitVolumeCost). Its tab in Revit is **Telltale**, its
 buttons have icons, a **Parameter standard** button shows the parameters to fill in and their values, and a **Help** button shows whether snapshots are waiting to be sent and opens this sheet. Installing
@@ -7,7 +7,8 @@ password again, and snapshots not yet sent are sent.
 
 **From 0.7, new versions install themselves.** The uploader fetches each new version Adnan releases and installs it
 in the background. When one is ready, Revit shows **"New version of Telltale Addin ready, restart Revit please"**:
-finish what you are doing, close Revit and start it again. If Revit then asks about an unsigned add-in, choose **Always
+finish what you are doing, close Revit and start it again. To get a new version straight away, press **Help** >
+**Check for updates** (from 0.7.2). If Revit then asks about an unsigned add-in, choose **Always
 Load**. You won't need to run Install.cmd again.
 
 The add-in takes a snapshot of the model's quantities, with its 3D shapes, **by itself after every successful
@@ -43,7 +44,8 @@ Synchronize with Central as you always do. On the **Telltale** tab:
 - **Raw dump** writes every element with all its parameters to one file, for checking. Use it only when Adnan asks. It
   is out of sight: click the small arrow beside the **Quantities** panel's name to show it.
 - **Help** shows the add-in's version, whether this PC takes the snapshot after each sync, and how many snapshots are
-  still **waiting to be sent**. From there you can open the website, this sheet, the outbox folder and the logs folder.
+  still **waiting to be sent**. From there you can open the website and this sheet, **check for updates**, and open the
+  **Telltale folder**, which holds the **Outbox** and the **Logs**.
 
 After each sync two files appear in the outbox, `%LocalAppData%\Telltale\Outbox`, one ending in **.snapshot.json.gz**
 and one in **.shapes.json.gz**. Within a minute the uploader moves them to the **Sent** folder beside them, which keeps
@@ -51,11 +53,11 @@ them for 90 days (the website keeps its own copy) and then deletes them.
 
 ## 3. If something seems wrong
 
-- **Help says snapshots are waiting, and they stay:** open `uploader.log` (Help > **Show the logs folder**).
+- **Help says snapshots are waiting, and they stay:** open `Logs\uploader.log` (Help > **Show the Telltale folder**).
   "will retry ... 403" means the site password is wrong: correct it in `%AppData%\Telltale\uploader.json` (Notepad), and
   the uploader uses it within a minute. Otherwise send the log to Adnan. Adnan's PC must be on for the website to be up.
 - **A file in Outbox\Rejected:** the website refused it; send the file and its `.reason.txt` to Adnan.
-- **Sync to website says "No snapshot was taken":** send `addin.log` (Help > **Show the logs folder**) to Adnan.
+- **Sync to website says "No snapshot was taken":** send `Logs\addin.log` (Help > **Show the Telltale folder**) to Adnan.
 - If a sync feels noticeably slower than the few seconds above, tell Adnan and send `addin.log` (it records each
   snapshot's time).
 - To switch the automatic snapshot off on one PC: create the file `%AppData%\Telltale\addin.json` containing

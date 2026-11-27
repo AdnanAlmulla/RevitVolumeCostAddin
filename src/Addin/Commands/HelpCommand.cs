@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using Addin.Snapshots;
+using Addin.Updates;
 using Autodesk.Revit.Attributes;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
@@ -11,7 +12,8 @@ namespace Addin.Commands
 {
     /// <summary>
     /// The "Help" button: what the add-in does, whether this PC takes the snapshot after each sync, how many snapshots are
-    /// still waiting for the uploader, and links to the website, the instruction sheet, the outbox and the logs. Reads
+    /// still waiting for the uploader, and links to the website, the instruction sheet, "Check for updates" and the folder
+    /// holding the outbox and the logs. Reads
     /// files only; it never touches the model, so it works with no model open.
     /// </summary>
     [Transaction(TransactionMode.ReadOnly)]
@@ -21,7 +23,8 @@ namespace Addin.Commands
         {
             string productName = AddinInfo.ProductName;
             string outboxFolder = SnapshotOutbox.FolderFor(productName);
-            string logFolder = AddinInfo.LogFolder;
+            // %LocalAppData%\<product>: the Outbox (with Sent and Rejected) and the Logs.
+            string productFolder = Path.GetDirectoryName(outboxFolder) ?? outboxFolder;
             string? siteAddress = UploaderSettingsFile.SiteAddressFrom(ReadTextOrNull(UploaderSettingsFile.PathFor(productName)));
             bool isInstructionSheetInstalled = File.Exists(AddinInfo.InstructionSheetPath);
             bool isSnapshotAfterSyncOn = AddinSettings.IsSnapshotAfterSyncOn(productName, ReadTextOrNull);
@@ -45,8 +48,8 @@ namespace Addin.Commands
             {
                 dialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink2, "Open the instructions");
             }
-            dialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink3, "Show the outbox folder");
-            dialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink4, "Show the logs folder");
+            dialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink3, "Check for updates");
+            dialog.AddCommandLink(TaskDialogCommandLinkId.CommandLink4, "Show the " + productName + " folder", "The outbox and the logs");
 
             TaskDialogResult choice = dialog.Show();
             if (choice == TaskDialogResult.CommandLink1 && siteAddress != null)
@@ -59,13 +62,12 @@ namespace Addin.Commands
             }
             else if (choice == TaskDialogResult.CommandLink3)
             {
-                Directory.CreateDirectory(outboxFolder);
-                OpenWithWindows(outboxFolder);
+                new CheckForUpdatesWindow(commandData.Application.MainWindowHandle).ShowDialog();
             }
             else if (choice == TaskDialogResult.CommandLink4)
             {
-                Directory.CreateDirectory(logFolder);
-                OpenWithWindows(logFolder);
+                Directory.CreateDirectory(productFolder);
+                OpenWithWindows(productFolder);
             }
             return Result.Succeeded;
         }
@@ -79,7 +81,7 @@ namespace Addin.Commands
             string oldestText = waiting.OldestWrittenAtLocal.Value.ToString("d MMM HH:mm", CultureInfo.CurrentCulture);
             string countText = waiting.SnapshotCount == 1 ? "1 snapshot" : waiting.SnapshotCount + " snapshots";
             return "Waiting to be sent: " + countText + ", the oldest from " + oldestText + ". " +
-                "If they stay, the uploader is not reaching the website: see uploader.log in the logs folder.";
+                "If they stay, the uploader is not reaching the website: see Logs\\uploader.log in the " + AddinInfo.ProductName + " folder.";
         }
 
         private static string? ReadTextOrNull(string path)

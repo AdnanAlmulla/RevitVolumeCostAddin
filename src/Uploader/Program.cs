@@ -78,6 +78,14 @@ Directory.CreateDirectory(sentFolder);
 Directory.CreateDirectory(rejectedFolder);
 Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 Log($"Started {UpdateCheck.RunningVersion}. Sending {outboxFolder}. Settings: {settingsPath}");
+// The Help button's "Check for updates" drops a request file: wake up for it at once instead of at the next minute.
+using var wakeUp = new SemaphoreSlim(0, 1);
+Directory.CreateDirectory(Path.Combine(localAppData, productName));
+using var requestWatcher = new FileSystemWatcher(Path.Combine(localAppData, productName), Addin.Updates.UpdateCheckFiles.REQUEST_FILE_NAME);
+requestWatcher.Created += (sender, arguments) => WakeUp();
+requestWatcher.Changed += (sender, arguments) => WakeUp();
+requestWatcher.Renamed += (sender, arguments) => WakeUp();
+requestWatcher.EnableRaisingEvents = true;
 var updateCheck = new UpdateCheck(productName, localAppData, roamingAppData, mayChangeStartAtSignIn: !isOnePass && !isScratchTrial,
     mayHandOver: !isOnePass, successorArguments, Log);
 
@@ -98,7 +106,19 @@ while (true)
     {
         break;
     }
-    await Task.Delay(timeBetweenPasses);
+    await wakeUp.WaitAsync(timeBetweenPasses);
+}
+
+void WakeUp()
+{
+    try
+    {
+        wakeUp.Release();
+    }
+    catch (SemaphoreFullException)
+    {
+        // Already woken.
+    }
 }
 
 async Task SendOutboxAsync()
@@ -117,9 +137,10 @@ async Task SendOutboxAsync()
     }
     string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
     string[] shapesPaths = Directory.GetFiles(outboxFolder, SHAPES_FILE_PATTERN).OrderBy(path => path).ToArray();
+    bool isSnapshotSent = false;
     foreach (string snapshotPath in snapshotPaths)
     {
-        await SendAsync(http, snapshotPath, SNAPSHOT_UPLOAD_PATH);
+        isSnapshotSent |= await SendAsync(http, snapshotPath, SNAPSHOT_UPLOAD_PATH);
     }
     foreach (string shapesPath in shapesPaths)
     {
@@ -134,10 +155,11 @@ async Task SendOutboxAsync()
         await SendAsync(http, shapesPath, SHAPES_UPLOAD_PATH);
     }
     // After the outbox, so a release that goes wrong can never keep snapshots from being sent first.
-    await updateCheck.RunWhenDueAsync(http);
+    await updateCheck.RunWhenDueAsync(http, isSnapshotSent);
 }
 
-async Task SendAsync(HttpClient client, string filePath, string uploadPath)
+// Whether the website took the file.
+async Task<bool> SendAsync(HttpClient client, string filePath, string uploadPath)
 {
     string fileName = Path.GetFileName(filePath);
     System.Net.HttpStatusCode? statusCode = null;
@@ -163,7 +185,7 @@ async Task SendAsync(HttpClient client, string filePath, string uploadPath)
             File.Move(filePath, sentPath, overwrite: true);
             UploadRules.MarkAsSent(sentPath, DateTime.UtcNow);
             Log($"sent {fileName} to {client.BaseAddress}");
-            break;
+            return true;
         case UploadOutcome.Rejected:
             File.Move(filePath, Path.Combine(rejectedFolder, fileName), overwrite: true);
             await File.WriteAllTextAsync(Path.Combine(rejectedFolder, fileName + ".reason.txt"), $"{(int?)statusCode} {reason}");
@@ -173,6 +195,7 @@ async Task SendAsync(HttpClient client, string filePath, string uploadPath)
             Log($"will retry {fileName}: {(statusCode == null ? reason : $"{(int)statusCode} {reason}")}");
             break;
     }
+    return false;
 }
 
 // A log that can't be written must never stop the uploader: it is called from the loop's own catch.

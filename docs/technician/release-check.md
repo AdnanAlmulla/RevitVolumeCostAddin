@@ -1,10 +1,10 @@
-# Telltale 0.7: the release check, for one BIM technician
+# Telltale 0.7.2: the release check, for one BIM technician
 
-One technician runs this once, on a PC that has an **earlier version (RevitVolumeCost, any version)** installed, before 0.7
-goes to everyone. It takes about 20 minutes, plus section F later on the same day. It checks the rename, the new buttons
-(Parameter standard and Help), (for the first time in Revit) the 3D shapes sent after a Synchronize with Central, and
-the automatic update to a test version Adnan releases for this check. Write down what you see at each step and send it to Adnan with the
-files listed at the end.
+Sections A to E: one technician runs them once, on a PC that has an **earlier version (RevitVolumeCost, any version)**
+installed, before the zip goes to everyone (about 20 minutes). Section F is for a PC that already has 0.7.0 or 0.7.1,
+when Adnan releases 0.7.2 on the website. Together they check the rename, the new buttons (Parameter standard and Help),
+(for the first time in Revit) the 3D shapes sent after a Synchronize with Central, and the automatic update. Write down
+what you see at each step and send it to Adnan with the files listed at the end.
 
 ## A. Before installing: leave one snapshot unsent
 
@@ -12,13 +12,13 @@ files listed at the end.
 2. In Revit, open any project model and press **Sync to website** on the **RevitVolumeCost** tab. Close Revit.
 3. Open `%LocalAppData%\RevitVolumeCost\Outbox` and write down the name of the newest **.snapshot.json.gz** file.
 
-## B. Install 0.7
+## B. Install 0.7.2
 
-4. Extract the 0.7 zip and double-click **Install.cmd** (see "READ ME FIRST" for the usual steps).
+4. Extract the 0.7.2 zip and double-click **Install.cmd** (see "READ ME FIRST" for the usual steps).
    **Expected:** lines saying it removed the old RevitVolumeCost files and moved its folders, and **no** question
    about the website address or password. If it asks for them, write that down, then type them in.
 5. **Expected** afterwards:
-   - `%AppData%\Autodesk\Revit\Addins\2026` holds **Telltale.addin** and a **Telltale** folder (with a **0.7.0** folder
+   - `%AppData%\Autodesk\Revit\Addins\2026` holds **Telltale.addin** and a **Telltale** folder (with a **0.7.2** folder
      inside), and no
      RevitVolumeCost.addin or RevitVolumeCost folder. The same in `...\2024` if the PC has Revit 2024.
    - Task Manager > **Startup apps** lists **Telltale uploader** (enabled). The Startup folder (Windows key + R,
@@ -35,9 +35,10 @@ files listed at the end.
 7. Switch Revit to the dark theme (File > Options > Colors, the theme setting: Dark > OK; the wording may differ a
    little, as this path was not checked in Revit). **Expected:** the icons turn
    light and stay easy to see. Take a screenshot, then switch back to Light.
-8. Press **Help** (still no model open). **Expected:** it opens (the button is not greyed out) and shows 0.7.0, "Snapshot
+8. Press **Help** (still no model open). **Expected:** it opens (the button is not greyed out) and shows 0.7.2, "Snapshot
    after Synchronize with Central: on" and "Waiting to be sent: none". Try each of its four links in turn: the website
-   opens in the browser, the instructions sheet opens, then the outbox folder, then the logs folder.
+   opens in the browser, the instructions sheet opens, **Check for updates** says "Telltale is up to date (0.7.2)" within
+   a few seconds, and **Show the Telltale folder** opens the folder holding Outbox and Logs.
 9. Press **Parameter standard** (still no model open). **Expected:** a window listing the five parameters as agreed on
    27 Nov, with **Roof** among the Division_Shared values and **Upstand** among the Wall Function_Shared values, then the
    settings, rules and examples. Write down what the line under the title says: "From the website" or "Built into this
@@ -56,25 +57,25 @@ files listed at the end.
 
 12. Repeat steps 6, 8, 9 and 10 in Revit 2024 with a model of that year. Revit 2024 has not run this add-in yet.
 
-## F. The automatic update (later the same day, with Adnan)
+## F. The update to 0.7.2 arriving by itself (a PC with 0.7.0 or 0.7.1)
 
-13. Open Revit 2026 with any model, and keep it open. Tell Adnan you have reached this step; he releases a test version,
-    **0.7.1**, on the website and tells you when. Then make the uploader check at once (it also checks every hour by
-    itself): Task Manager > **Details**, right-click **Telltale.Uploader.exe** > **End task**, then double-click
-    `%LocalAppData%\Telltale\Uploader\0.7.0\Telltale.Uploader.exe` (nothing shows; it runs in the background).
+13. Open Revit 2026 with any model and keep it open. Once Adnan has released 0.7.2, make the uploader check at once
+    (0.7.0 and 0.7.1 check only hourly): Task Manager (Ctrl + Shift + Esc) > **Details**, right-click
+    **Telltale.Uploader.exe** > **End task**, then double-click the **Telltale.Uploader.exe** in the newest folder of
+    `%LocalAppData%\Telltale\Uploader\` (nothing shows; it runs in the background).
 14. Go back to Revit and leave it idle for up to 10 minutes. **Expected:** a message
     **"New version of Telltale Addin ready, restart Revit please"**, once. Write down how long it took to appear and
     whether it came back after you closed it (it should not).
-15. Check `%AppData%\Autodesk\Revit\Addins\2026\Telltale`: it should hold a **0.7.0** and a **0.7.1** folder.
-16. Close Revit and start it again. **Expected:** Help shows **0.7.1**. Write down whether Revit asked the unsigned
+15. Check `%AppData%\Autodesk\Revit\Addins\2026\Telltale`: it should hold a **0.7.2** folder and the one before it.
+16. Close Revit and start it again. **Expected:** Help shows **0.7.2**. Write down whether Revit asked the unsigned
     add-in question again, and whether antivirus or Windows warned about anything.
-17. Task Manager > **Details**, right-click **Telltale.Uploader.exe** > **Open file location**. **Expected:** the folder
-    is `...\Telltale\Uploader\0.7.1`. Press **Parameter standard**: the line under the title should now say "From the
-    website".
+17. Help > **Check for updates**. **Expected:** "Telltale is up to date (0.7.2)" within a few seconds. Task Manager >
+    **Details**, right-click **Telltale.Uploader.exe** > **Open file location**: the folder is `...\Uploader\0.7.2`.
+    Press **Parameter standard**: the line under the title says "From the website".
 
 ## Send back to Adnan
 
 - What you saw at each step, especially anything that differed from "Expected".
 - The screenshots from steps 6 and 7.
-- `addin.log` and `uploader.log` (Help > Show the logs folder), after section F.
+- `addin.log` and `uploader.log` (Help > Show the Telltale folder > Logs).
 - Revit's exact build for each year used (in Revit: the ? menu > About).

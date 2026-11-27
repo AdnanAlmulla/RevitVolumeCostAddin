@@ -29,6 +29,32 @@ namespace Addin.Updates
             return Path.Combine(yearFolder, AddinInfo.ProductName + ".addin");
         }
 
+        /// <summary>The version this Revit year's manifest points at, or null when it can't be read.</summary>
+        private static Version? InstalledVersion()
+        {
+            string manifestPath = ManifestPath();
+            return File.Exists(manifestPath) ? ReleaseVersions.FromManifest(File.ReadAllText(manifestPath)) : null;
+        }
+
+        /// <summary>Whether the next Revit start loads a newer version than this session runs.</summary>
+        public static bool IsNewerVersionInstalled()
+        {
+            try
+            {
+                return ReleaseVersions.IsNewer(InstalledVersion(), ReleaseVersions.Parse(AddinInfo.Version));
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+
+        /// <summary>The technician has been told already (by Help's "Check for updates"): not again this session.</summary>
+        public static void MarkShown()
+        {
+            isShownThisSession = true;
+        }
+
         /// <summary>Called on Revit's Idling event. Never throws: a failed check waits for the next one.</summary>
         public static void CheckWhenDue()
         {
@@ -39,12 +65,7 @@ namespace Addin.Updates
             TIME_SINCE_LAST_CHECK.Restart();
             try
             {
-                string manifestPath = ManifestPath();
-                if (!File.Exists(manifestPath))
-                {
-                    return;
-                }
-                Version? installedVersion = ReleaseVersions.FromManifest(File.ReadAllText(manifestPath));
+                Version? installedVersion = InstalledVersion();
                 Version? runningVersion = ReleaseVersions.Parse(AddinInfo.Version);
                 if (!ReleaseVersions.IsNewer(installedVersion, runningVersion))
                 {
