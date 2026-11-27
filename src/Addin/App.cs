@@ -57,6 +57,14 @@ namespace Addin
             {
                 ToolTip = "Takes a snapshot of this model's quantities now and leaves it for the uploader to send. Changes nothing in the model.",
             });
+            var standardButtonData = new PushButtonData("ParameterStandard", "Parameter\nstandard", AddinInfo.AssemblyPath, typeof(ParameterStandardCommand).FullName)
+            {
+                ToolTip = "The shared parameters to fill in, their allowed values and the rules, as agreed with Adnan.",
+            };
+            // The standard is read with no model open too.
+            standardButtonData.AvailabilityClassName = typeof(AlwaysAvailable).FullName;
+            AddButton(quantitiesPanel, "parameters", standardButtonData);
+
             // Raw dump is for checking only, so it waits in the panel's drop-down (the arrow beside "Quantities"), out of
             // sight until asked for (engineer, 2026-11-27).
             quantitiesPanel.AddSlideOut();

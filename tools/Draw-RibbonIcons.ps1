@@ -25,6 +25,11 @@ $ICONS = [ordered]@{
         Stroke = 'M 12.5,25 H 9 A 5,5 0 0 1 8.6,15 A 7.5,7.5 0 0 1 23,12.5 A 6.25,6.25 0 0 1 23.75,25 H 19.5 M 16,28 V 15.5 M 12,19.5 L 16,15.5 L 20,19.5'
         Fill = ''
     }
+    # A list of three rows, each a dot and a line: the parameter standard. (Boxes ran together at 16 px.)
+    'parameters' = @{
+        Stroke = 'M 13,8 H 27 M 13,16 H 27 M 13,24 H 23'
+        Fill = 'M 7,5.5 A 2.5,2.5 0 1 1 6.99,5.5 Z M 7,13.5 A 2.5,2.5 0 1 1 6.99,13.5 Z M 7,21.5 A 2.5,2.5 0 1 1 6.99,21.5 Z'
+    }
     # A page with a folded corner and three lines of text.
     'rawdump' = @{
         Stroke = 'M 8,4 H 19 L 25,10 V 28 H 8 Z M 19,4 V 10 H 25 M 12,15 H 21 M 12,19 H 21 M 12,23 H 18'
