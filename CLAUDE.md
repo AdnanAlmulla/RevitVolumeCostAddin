@@ -4,12 +4,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**The Revit add-in of Telltale** (repo `RevitVolumeCostAddin`): a Revit add-in for Revit
+**The Revit add-in of Telltale** (GitHub repo `TelltaleAddin`; the clone's folder on the engineer's PC is still `RevitVolumeCostAddin`): a Revit add-in for Revit
 2022–2027 that reads the quantities of a structural model (concrete, steel and other materials) and sends them, as a snapshot, to the
 project's internal website. It also holds the **snapshot classes** (`src/Contracts`) that the website's API
 compiles against.
 
-The website (API, database, site) lives in a separate private repo, `RevitVolumeCost`. This repo was split
+The website (API, database, site) lives in a separate private repo, `Telltale`. This repo was split
 off on 2026-11-25 so that Revit-side contributors work here only (engineer's ruling).
 
 **The name is Telltale** (engineer, 2026-11-27). "Revit Volume & Cost", `RevitVolumeCost` and
@@ -239,7 +239,7 @@ _harnesses/           throwaway probes, never part of a build
 - **Work tracking:** `BACKLOG.md` + `docs/backlog-archive.md` (IDs `F-` feature, `B-` bug, `T-` tech
   debt, never reused). This repo's IDs are its own; the website repo has a separate list.
 - **AGENTS.md** mirrors this file for Codex. Apply every edit to both.
-- Remote: https://github.com/AdnanAlmulla/RevitVolumeCostAddin (**public**, 2026-11-25).
+- Remote: https://github.com/AdnanAlmulla/TelltaleAddin (**public**, 2026-11-25; renamed from `RevitVolumeCostAddin` on 2026-11-27, GitHub forwards the old address). The website builds against a clone of it in a folder named `RevitVolumeCostAddin` beside the website clone, until the folders are renamed (website T-002).
 - **No licence** (engineer, 2026-11-25): the repo carries no open-source licence, so no one is granted the right
   to copy or reuse the code. Don't add a `LICENSE` file or licence text. Because it is public, never commit
   secrets, tenant or client ids, internal paths or company cost data here. **Never commit a dump, snapshot or
