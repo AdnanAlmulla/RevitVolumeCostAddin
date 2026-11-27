@@ -4,7 +4,12 @@
 #     powershell -NoProfile -ExecutionPolicy Bypass -File .\Build-Package.ps1
 #
 # It runs the tests first and stops if any fails. Output: artifacts\<product>-<version>\ and its .zip
-# (artifacts\ is not committed).
+# (artifacts\ is not committed). That .zip is also what Adnan publishes on the website for the uploaders to install.
+#
+# -Version <major.minor.patch> builds under another version number than Directory.Build.props', for a test release
+# of the update path (the release check publishes one).
+
+param([string]$Version)
 
 $ErrorActionPreference = 'Stop'
 
@@ -24,7 +29,13 @@ function Invoke-Checked([string]$description, [scriptblock]$command) {
 }
 
 $productName = (& dotnet msbuild $addinProject -getProperty:ProductName -p:Configuration=R26).Trim()
-$version = (& dotnet msbuild $addinProject -getProperty:Version -p:Configuration=R26).Trim()
+if ($Version) {
+    if ($Version -notmatch '^\d+\.\d+\.\d+$') { throw "-Version must be major.minor.patch, such as 0.7.1." }
+    $version = $Version
+}
+else {
+    $version = (& dotnet msbuild $addinProject -getProperty:Version -p:Configuration=R26).Trim()
+}
 
 Invoke-Checked 'Tests' { dotnet test $testProject -nologo -v q }
 
@@ -35,11 +46,12 @@ New-Item -ItemType Directory -Force -Path $packageFolder | Out-Null
 
 foreach ($configuration in $REVIT_YEAR_BY_CONFIGURATION.Keys) {
     $revitYear = $REVIT_YEAR_BY_CONFIGURATION[$configuration]
-    Invoke-Checked "Build for Revit $revitYear" { dotnet build $addinProject -c $configuration -nologo -v q }
+    Invoke-Checked "Build for Revit $revitYear" { dotnet build $addinProject -c $configuration -nologo -v q "-p:Version=$version" }
 
     $buildFolder = Join-Path $repositoryFolder "src\Addin\bin\$configuration"
     $yearFolder = Join-Path $packageFolder $revitYear
-    $addinFolder = Join-Path $yearFolder $productName
+    # Each version in its own folder, which the manifest names (src/Addin/Manifest.addin.template).
+    $addinFolder = Join-Path $yearFolder "$productName\$version"
     New-Item -ItemType Directory -Force -Path $addinFolder | Out-Null
     Copy-Item (Join-Path $buildFolder "$productName.addin") $yearFolder
     # Only our own DLL (and its .pdb, for error line numbers): the add-in carries no third-party files.
@@ -53,7 +65,7 @@ foreach ($configuration in $REVIT_YEAR_BY_CONFIGURATION.Keys) {
 
 # The uploader, one build for every Revit year (.NET 8, no third-party packages).
 $uploaderProject = Join-Path $repositoryFolder 'src\Uploader\Uploader.csproj'
-Invoke-Checked 'Build the uploader' { dotnet publish $uploaderProject -c Release -nologo -v q -o (Join-Path $packageFolder 'Uploader') }
+Invoke-Checked 'Build the uploader' { dotnet publish $uploaderProject -c Release -nologo -v q "-p:Version=$version" -o (Join-Path $packageFolder 'Uploader') }
 
 Copy-Item (Join-Path $repositoryFolder 'installer\Install.cmd') $packageFolder
 Copy-Item (Join-Path $repositoryFolder 'installer\Install-Addin.ps1') $packageFolder

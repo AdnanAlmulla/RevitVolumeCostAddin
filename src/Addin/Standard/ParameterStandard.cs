@@ -47,9 +47,10 @@ namespace Addin.Standard
     /// technician's PC carries the version of the standard it was built with (engineer, 2026-11-27: "the plugin needs to
     /// carry the identity of the latest instance parameters").
     ///
-    /// The snapshot does not depend on this list: it sends every parameter with its raw value, and the website reads
-    /// them by name and checks the values (CLAUDE.md "Facts only"). A change here must also be made in the Excel sheet
-    /// and on the website.
+    /// The window shows the website's copy instead when the uploader has received one (StandardContent,
+    /// ParameterStandardFile), so a change to the standard reaches the technicians without a new add-in version; this
+    /// built-in copy is what shows until then. The snapshot does not depend on either: it sends every parameter with its
+    /// raw value, and the website reads them by name and checks the values (CLAUDE.md "Facts only").
     /// </summary>
     public static class ParameterStandard
     {
@@ -127,5 +128,8 @@ namespace Addin.Standard
             new KeyValuePair<string, string>("A PT slab on Podium 02", "Division_Shared = Podium;  Structural System_Shared = PT;  Concrete Grade_Shared = C40/50"),
             new KeyValuePair<string, string>("An SHS 300x300x8 steel column", "Division_Shared = Tower;  Steel Grade_Shared = S355"),
         };
+
+        /// <summary>The standard built into this add-in, whole, for when the website's copy has not been received.</summary>
+        public static StandardContent BuiltIn => new StandardContent(null, AGREED_ON, PARAMETERS, PARAMETER_SETTINGS, RULES, EXAMPLES);
     }
 }

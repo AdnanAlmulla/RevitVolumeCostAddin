@@ -9,6 +9,10 @@ using Uploader;
 //                                   installer); a second copy exits at once
 //   <product>.Uploader.exe --once   one pass, then exits
 //   --site <address> and --outbox <folder> override the settings (for a check against a test site)
+//   --local-app-data <folder> and --roaming-app-data <folder> stand in for Windows' own folders: a trial run against
+//                                   scratch folders, which also never touches the registry or restarts the uploader
+//   --after <process id>            used by an updating uploader when it starts its successor: wait for it to end first
+// It also installs newer releases the website offers, and saves the website's parameter standard (UpdateCheck).
 // The website's address and its site password are per-PC settings in %AppData%\<product>\uploader.json, never
 // committed (public repo): { "siteAddress": "http://<host PC>:5080", "sitePassword": "<the site password>" }. They are
 // read again at every pass, so a corrected setting is used within a minute. It has no window: what it does goes to
@@ -30,14 +34,29 @@ TimeSpan timeBetweenPasses = TimeSpan.FromMinutes(1);
 TimeSpan uploadTimeout = TimeSpan.FromMinutes(2);
 
 string productName = Assembly.GetEntryAssembly()?.GetCustomAttribute<AssemblyProductAttribute>()?.Product ?? "Site";
-string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-string roamingAppData = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+string localAppData = ArgumentAfter("--local-app-data") ?? Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+string roamingAppData = ArgumentAfter("--roaming-app-data") ?? Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
 string outboxFolder = ArgumentAfter("--outbox") ?? Path.Combine(localAppData, productName, "Outbox");
 string sentFolder = Path.Combine(outboxFolder, "Sent");
 string rejectedFolder = Path.Combine(outboxFolder, "Rejected");
 string settingsPath = Path.Combine(roamingAppData, productName, "uploader.json");
 string logPath = Path.Combine(localAppData, productName, "Logs", "uploader.log");
 bool isOnePass = args.Contains("--once");
+bool isTrialRun = isOnePass || ArgumentAfter("--local-app-data") != null || ArgumentAfter("--roaming-app-data") != null;
+
+// An uploader updating itself starts this copy and then ends: wait for it, so the two never run together.
+if (int.TryParse(ArgumentAfter("--after"), out int predecessorProcessId))
+{
+    try
+    {
+        using System.Diagnostics.Process predecessor = System.Diagnostics.Process.GetProcessById(predecessorProcessId);
+        predecessor.WaitForExit(TimeSpan.FromSeconds(60));
+    }
+    catch (ArgumentException)
+    {
+        // It has ended already.
+    }
+}
 
 // One running copy per Windows user: two would send and move the same files.
 using var runningCopy = new Mutex(initiallyOwned: true, $"Local\\{productName}.Uploader", out bool isOnlyCopy);
@@ -50,7 +69,8 @@ Directory.CreateDirectory(outboxFolder);
 Directory.CreateDirectory(sentFolder);
 Directory.CreateDirectory(rejectedFolder);
 Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
-Log($"Started. Sending {outboxFolder}. Settings: {settingsPath}");
+Log($"Started {UpdateCheck.RunningVersion}. Sending {outboxFolder}. Settings: {settingsPath}");
+var updateCheck = new UpdateCheck(productName, localAppData, roamingAppData, isTrialRun, Log);
 
 while (true)
 {
@@ -59,6 +79,7 @@ while (true)
     try
     {
         await SendOutboxAsync();
+        updateCheck.StartAtSignInFromHere();
     }
     catch (Exception exception)
     {
@@ -80,17 +101,14 @@ async Task SendOutboxAsync()
     }
     string siteAddress = ArgumentAfter("--site") ?? ReadSetting(settingsPath, "siteAddress") ?? DEFAULT_SITE_ADDRESS;
     string? sitePassword = ReadSetting(settingsPath, "sitePassword");
-    string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
-    string[] shapesPaths = Directory.GetFiles(outboxFolder, SHAPES_FILE_PATTERN).OrderBy(path => path).ToArray();
-    if (snapshotPaths.Length == 0 && shapesPaths.Length == 0)
-    {
-        return;
-    }
     using var http = new HttpClient { BaseAddress = new Uri(siteAddress), Timeout = uploadTimeout };
     if (sitePassword != null)
     {
         http.DefaultRequestHeaders.Add(SITE_PASSWORD_HEADER, sitePassword);
     }
+    await updateCheck.RunWhenDueAsync(http);
+    string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
+    string[] shapesPaths = Directory.GetFiles(outboxFolder, SHAPES_FILE_PATTERN).OrderBy(path => path).ToArray();
     foreach (string snapshotPath in snapshotPaths)
     {
         await SendAsync(http, snapshotPath, SNAPSHOT_UPLOAD_PATH);

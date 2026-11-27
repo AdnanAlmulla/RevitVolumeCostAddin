@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Addin.Commands;
 using Addin.Ribbon;
 using Addin.Snapshots;
+using Addin.Updates;
 using Autodesk.Revit.DB;
 using Autodesk.Revit.DB.Events;
 using Autodesk.Revit.UI;
@@ -29,6 +30,8 @@ namespace Addin
         {
             // The snapshot first: nothing on the ribbon may cost it.
             application.ControlledApplication.DocumentSynchronizedWithCentral += OnSynchronizedWithCentral;
+            // The "new version ready, restart Revit" note, checked while Revit is idle (UpdateNotice).
+            application.Idling += OnIdling;
             try
             {
                 AddRibbon(application);
@@ -44,7 +47,13 @@ namespace Addin
         public Result OnShutdown(UIControlledApplication application)
         {
             application.ControlledApplication.DocumentSynchronizedWithCentral -= OnSynchronizedWithCentral;
+            application.Idling -= OnIdling;
             return Result.Succeeded;
+        }
+
+        private static void OnIdling(object? sender, IdlingEventArgs arguments)
+        {
+            UpdateNotice.CheckWhenDue();
         }
 
         private static void AddRibbon(UIControlledApplication application)

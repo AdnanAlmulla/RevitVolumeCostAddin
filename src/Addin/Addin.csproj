@@ -49,6 +49,11 @@
     <None Remove="Manifest.addin.template" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)' == 'net48'">
+    <!-- .NET Framework's own JSON reader, for the website's copy of the parameter standard; part of Windows, never shipped. -->
+    <Reference Include="System.Runtime.Serialization" />
+  </ItemGroup>
+
   <ItemGroup>
     <!-- The ribbon icons, inside the DLL (the package ships only the DLL). Drawn by tools/Draw-RibbonIcons.ps1. -->
     <EmbeddedResource Include="Resources\Icons\*.png" LogicalName="Icons.%(Filename)%(Extension)" />
@@ -66,7 +71,7 @@
   <Target Name="WriteAddinManifest" AfterTargets="Build">
     <PropertyGroup>
       <ManifestTemplateText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)\Manifest.addin.template'))</ManifestTemplateText>
-      <ManifestText>$(ManifestTemplateText.Replace('$ProductName$', '$(ProductName)'))</ManifestText>
+      <ManifestText>$(ManifestTemplateText.Replace('$ProductName$', '$(ProductName)').Replace('$Version$', '$(Version)'))</ManifestText>
     </PropertyGroup>
     <WriteLinesToFile File="$(OutDir)$(ProductName).addin" Lines="$(ManifestText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
   </Target>

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Written at build time from src/Addin/Manifest.addin.template. The assembly path is relative to this file. -->
+<!-- Written at build time from src/Addin/Manifest.addin.template. The assembly path is relative to this file, and names the version folder: the uploader installs an update by pointing it at a new one. -->
 <RevitAddIns>
   <AddIn Type="Application">
     <Name>$ProductName$</Name>
-    <Description>Adds a $ProductName$ tab (Sync to website, Raw dump, Help) and takes a quantity snapshot after each Synchronize with Central. Only reads the model.</Description>
-    <Assembly>$ProductName$\$ProductName$.dll</Assembly>
+    <Description>Adds a $ProductName$ tab (Sync to website, Parameter standard, Help) and takes a quantity snapshot after each Synchronize with Central. Only reads the model.</Description>
+    <Assembly>$ProductName$\$Version$\$ProductName$.dll</Assembly>
     <FullClassName>Addin.App</FullClassName>
     <AddInId>6f1d3a52-8c47-4b0e-9a61-2f7c5e3b9d14</AddInId>
     <VendorId>KillaDesign</VendorId>

@@ -7,9 +7,15 @@
   <PropertyGroup>
     <!-- No window: it runs from Windows sign-in, and its log is %LocalAppData%\<product>\Logs\uploader.log. -->
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net8.0</TargetFramework>
+    <!-- Windows only (it sets the start at sign-in in the registry); needs only the base .NET 8 runtime. -->
+    <TargetFramework>net8.0-windows</TargetFramework>
     <AssemblyName>$(ProductName).Uploader</AssemblyName>
     <RootNamespace>Uploader</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
   </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Release numbers and the manifest's version folder, read with the same code as the add-in's. -->
+    <Compile Include="..\Addin\Updates\ReleaseVersions.cs" Link="Shared\ReleaseVersions.cs" />
+  </ItemGroup>
 </Project>

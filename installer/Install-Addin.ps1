@@ -3,9 +3,10 @@
 # Start it with "Install.cmd" (double-click), with Revit closed. For each year folder beside this script
 # (2024, 2026, ...) whose Revit is installed, it copies (after clearing away a copy installed under a former name,
 # Move-FormerInstall.ps1):
-#     <year>\<product>.addin   to  %AppData%\Autodesk\Revit\Addins\<year>\
-#     <year>\<product>\        to  %AppData%\Autodesk\Revit\Addins\<year>\<product>\
-# replacing an earlier copy. Revit reads .addin files from that folder when it starts.
+#     <year>\<product>.addin              to  %AppData%\Autodesk\Revit\Addins\<year>\
+#     <year>\<product>\<version>\         to  %AppData%\Autodesk\Revit\Addins\<year>\<product>\<version>\
+# replacing an earlier copy. Revit reads .addin files from that folder when it starts; the manifest names the version
+# folder, so the uploader can install later versions beside the running one (src/Uploader/AddinUpdates.cs).
 #
 # The add-in is copied to this computer's own disk and never run from the network share: Windows reads a
 # DLL piece by piece as it is used, and a failed read over the network closes the program with no message
@@ -90,15 +91,20 @@ if ($installedYearCount -eq 0) {
     exit 1
 }
 
-# The uploader: sends the add-in's snapshots to the website. Copied to this computer's own disk, started now and at
-# every Windows sign-in (a shortcut in the user's Startup folder), with no window. Its two settings, the website's
-# address and the site password, come from Adnan and are kept in %AppData%\<product>\uploader.json, never in the package.
+# The uploader: sends the add-in's snapshots to the website and installs later versions. Copied to this computer's own
+# disk, in Uploader\<version>\, started now and at every Windows sign-in (the user's Run entry "<product> uploader",
+# which an updating uploader repoints to its new version), with no window. Its two settings, the website's address and
+# the site password, come from Adnan and are kept in %AppData%\<product>\uploader.json, never in the package.
 $sourceUploaderFolder = Join-Path $packageFolder 'Uploader'
 $uploaderProgramName = "$productName.Uploader"
-$targetUploaderFolder = Join-Path $env:LOCALAPPDATA "$productName\Uploader"
+# The package's version: the name of the version folder beside each year's manifest.
+$packageVersion = (Get-ChildItem -Path (Join-Path $yearFolders[0].FullName $productName) -Directory | Select-Object -First 1).Name
+$uploaderRootFolder = Join-Path $env:LOCALAPPDATA "$productName\Uploader"
+$targetUploaderFolder = Join-Path $uploaderRootFolder $packageVersion
 $uploaderProgram = Join-Path $targetUploaderFolder "$uploaderProgramName.exe"
 $uploaderSettingsPath = Join-Path $env:APPDATA "$productName\uploader.json"
-$startupShortcutPath = Join-Path ([Environment]::GetFolderPath('Startup')) "$productName uploader.lnk"
+$startupRegistryKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Run'
+$startupEntryName = "$productName uploader"
 # The uploader is built for .NET 8, which Revit 2025 and 2026 install; a PC with only Revit 2024 may not have it.
 $dotNet8Folders = Get-ChildItem -Path (Join-Path $env:ProgramFiles 'dotnet\shared\Microsoft.NETCore.App') -Directory -Filter '8.*' -ErrorAction SilentlyContinue
 
@@ -111,9 +117,10 @@ elseif (-not $dotNet8Folders) {
 elseif ($PSCmdlet.ShouldProcess($targetUploaderFolder, 'Install the uploader and start it at sign-in')) {
     Get-Process -Name $uploaderProgramName -ErrorAction SilentlyContinue | Stop-Process -Force
     Start-Sleep -Seconds 1
-    if (Test-Path $targetUploaderFolder) {
-        Remove-Item -Recurse -Force -Path $targetUploaderFolder
+    if (Test-Path $uploaderRootFolder) {
+        Remove-Item -Recurse -Force -Path $uploaderRootFolder
     }
+    New-Item -ItemType Directory -Force -Path $uploaderRootFolder | Out-Null
     Copy-Item -Recurse -Path $sourceUploaderFolder -Destination $targetUploaderFolder
     Get-ChildItem -Recurse -File -Path $targetUploaderFolder | Unblock-File
 
@@ -139,11 +146,7 @@ elseif ($PSCmdlet.ShouldProcess($targetUploaderFolder, 'Install the uploader and
         [IO.File]::WriteAllText($uploaderSettingsPath, $newSettings)
     }
 
-    $shell = New-Object -ComObject WScript.Shell
-    $shortcut = $shell.CreateShortcut($startupShortcutPath)
-    $shortcut.TargetPath = $uploaderProgram
-    $shortcut.WorkingDirectory = $targetUploaderFolder
-    $shortcut.Save()
+    Set-ItemProperty -Path $startupRegistryKey -Name $startupEntryName -Value "`"$uploaderProgram`""
     Start-Process -FilePath $uploaderProgram -WorkingDirectory $targetUploaderFolder
     Write-Host "Uploader: installed in $targetUploaderFolder, running, and started at every sign-in." -ForegroundColor Green
     Write-Host "Its log: $env:LOCALAPPDATA\$productName\Logs\uploader.log"
