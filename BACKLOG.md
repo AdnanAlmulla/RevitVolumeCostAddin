@@ -157,7 +157,9 @@ open Revit, the next Revit start runs 0.7.1, the uploader runs from `Uploader\0.
 11:19 UTC (checked: the download serves the same bytes). He then found the hourly wait too long when he wants a version
 out now, so 0.7.2 adds Help's Check for updates (request and result files beside the outbox; the uploader wakes at once)
 and a check right after each sent snapshot; the background check stays hourly (engineer). Trials: 0.7.0 to 0.7.2 (21
-checks), 0.7.2 to a 0.7.3 test (25 checks, answers in under a second). Built, not published; Adnan publishes it.
+checks), 0.7.2 to a 0.7.3 test (25 checks, answers in under a second). Adnan published 0.7.2 at 11:47 UTC (SHA-256 412fdee1..., the build
+committed as 24258e0); a PC still on 0.7.0 goes straight to 0.7.2. Don't rebuild artifacts\Telltale-0.7.2.zip: the
+next build is 0.7.3.
 **Progress (2026-11-27):** Built and committed. 23 new unit tests; `tests/Updates/Test-UpdateEndToEnd.ps1` passed (real
 0.7.0 uploaders against a stand-in site offering a 0.7.1 test package, scratch folders, 21 checks: manifest repointed, old
 version kept, Revit 2024 left alone when not installed, uploader staged, standard saved, a second run idle, a running
@@ -165,6 +167,23 @@ uploader handing over to 0.7.1 and ending, a corrupted download installing nothi
 976a4a1), not live until a site restart Adnan approves. Not checked: Revit itself, the Run entry (it acts on the real
 registry), the real installer beyond `-WhatIf`, antivirus. Open, for the engineer: whether to sign releases (the hash
 proves the download is whole, not who made it; the site is plain http).
+
+### [T-005] P2 — Uploader: say more in its log, and remove the old Startup shortcut (next version)
+<!-- type: tech debt | added: 2026-11-27 -->
+**What:** Three small changes to the uploader, for the next batched version after 0.7.2:
+1. A second copy that exits because one is already running writes a line ("another copy is running; this one exits")
+   before it ends. Today it exits silently, before "Started".
+2. Each update check that finds nothing newer writes one line ("update: up to date (x.y.z)"). Today it writes nothing,
+   so the log can't show that a check happened.
+3. At start (not in a scratch trial), delete `<Startup folder>\<product> uploader.lnk` when it exists. Builds of 0.7.0
+   made before about 15:00 on 2026-11-27 started the uploader from that shortcut; later installs use the Run entry and
+   delete the old flat `Uploader\` folder, so the shortcut points at a file that no longer exists.
+**Why:** 2026-11-27, the technician's log after a relaunch showed no "Started" and no "update:" line. The code explains it
+(nothing newer at the start check, so no line; a relaunch while a copy runs exits silently), but the log should say so.
+The stale shortcut sits on that technician's PC (installed 14:08 from an early 0.7.0 build, reinstalled 15:15).
+**Where:** `src/Uploader/Program.cs` (the mutex check; the start), `src/Uploader/UpdateCheck.cs` (the up-to-date return).
+**Acceptance:** The trial (`tests/Updates/Test-UpdateEndToEnd.ps1`) sees the up-to-date line and the second-copy line; a
+scratch Startup folder's old shortcut is removed (pass the Startup folder as an override, as the AppData folders are).
 
 ## Done
 

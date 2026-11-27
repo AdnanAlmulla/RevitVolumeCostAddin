@@ -56,11 +56,11 @@ changes and batch them into one version.** Models are assumed to be on ACC (engi
 at the moment beyond 0.7.0.
 
 **Where things stand (2026-11-27, afternoon):** a technician runs **0.7.0** in Revit (Help opened; engineer, 11:24 UTC).
-Adnan published the test **0.7.1** on the website at 11:19 UTC. **0.7.2 is built and committed, not published**: Help's
+Adnan published the test **0.7.1** on the website at 11:19 UTC. **0.7.2 is published** (11:47 UTC, the build committed as 24258e0; the next build is 0.7.3): Help's
 **Check for updates** (the uploader checks at once and answers in plain words), a check right after each snapshot is
 sent, the background check still hourly (engineer: "every hour please. With the other checks its fine"), and Help's
-outbox and logs links merged into one "Show the Telltale folder". Adnan publishes it with the website's "Publish
-add-in.cmd"; release check section F follows it on the technician's PC. Earlier the same day, **0.7.0 was built**. It batches
+outbox and logs links merged into one "Show the Telltale folder". Adnan publishes with the website's "Publish add-in.cmd";
+release check section F follows 0.7.2 onto the technician's PC. Held for the next version: backlog T-005. Earlier the same day, **0.7.0 was built**. It batches
 0.6.0's untested shapes-after-sync with the rename to Telltale (T-001), ribbon icons for Revit's light and dark themes,
 a Help button, a Parameter standard window, **updates through the uploader** (below), Raw dump moved out of sight, sent
 files kept 90 days, and robustness fixes (below). **0.7.0 is meant to be the last zip handed out** (engineer, 2026-11-27):
