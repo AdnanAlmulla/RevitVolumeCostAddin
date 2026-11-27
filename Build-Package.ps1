@@ -60,6 +60,8 @@ Copy-Item (Join-Path $repositoryFolder 'installer\Install-Addin.ps1') $packageFo
 Copy-Item (Join-Path $repositoryFolder 'installer\Move-FormerInstall.ps1') $packageFolder
 # Shipped as .txt: many PCs have no program for .md files.
 Copy-Item $instructionSheet (Join-Path $packageFolder 'READ ME FIRST.txt')
+# The one-off check of this release in Revit, for the technician who runs it.
+Copy-Item (Join-Path $repositoryFolder 'docs\technician\release-check.md') (Join-Path $packageFolder 'Release check.txt')
 
 $zipPath = "$packageFolder.zip"
 if (Test-Path $zipPath) { Remove-Item -Force $zipPath }

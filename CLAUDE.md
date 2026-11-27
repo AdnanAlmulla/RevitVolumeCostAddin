@@ -17,10 +17,13 @@ off on 2026-11-25 so that Revit-side contributors work here only (engineer's rul
 (`Directory.Build.props`, `ProductName`) and nowhere else in code. The assembly name, the add-in's folder and its `.addin` manifest (written at build time from
 `src/Addin/Manifest.addin.template`) derive from it, and the code reads it back from the assembly name. C#
 namespaces are written in source, so they stay neutral (`Addin.*`; `Contracts.*` when it exists) and never
-carry the name. **`ProductName` is still `RevitVolumeCost`** until the next batched release (backlog T-001): it
-also names the ribbon tab, the DLL and manifest, the outbox, the settings and log folders, the uploader's folder,
-shortcut and mutex, so changing it beside an installed copy would load two add-ins and orphan the outbox. The
-technician sheets describe the installed build, so they keep the old name until that release.
+carry the name. **`ProductName` is `Telltale` from 0.7.0** (`RevitVolumeCost` up to 0.6.0; backlog T-001): it also
+names the ribbon tab, the DLL and manifest, the outbox, the settings and log folders, the uploader's folder, shortcut
+and mutex. So an old copy left beside a renamed one would load two add-ins and strand the old outbox:
+`installer/Move-FormerInstall.ps1`, run by `Install.cmd` first, clears a copy installed under a former name away and
+carries its settings, outbox and logs over. Its list of former names is the one place a product name is written as
+text outside `Directory.Build.props`; add the current name to it before ever renaming again. The `AddInId` in the
+manifest template stays the same across names.
 
 **Who runs what in Revit** (engineer, 2026-11-25): the engineer does not open Revit. The BIM technician
 installs the add-in, fills the parameters, runs Export / Sync and does the per-release check. Every Revit step
@@ -50,7 +53,13 @@ website's `appsettings.json` "Classification"), then has 0.6 tested on a tagged 
 after a sync and their upload; the website side is live. **He does not want to re-issue versions lightly: hold add-in
 changes and batch them into one version.** Models are assumed to be on ACC (engineer, 2026-11-26: the technicians are
 "centralizing to ACC"); the after-sync snapshot skips models not in ACC, as ruled on 2026-11-25. No changes are held
-at the moment, except the rename to Telltale (T-001).
+at the moment beyond 0.7.0.
+
+**Where things stand (2026-11-27):** **0.7.0 is built and committed, not handed out, not run in Revit.** It batches
+0.6.0's untested shapes-after-sync with the rename to Telltale (T-001), ribbon icons for Revit's light and dark themes,
+a Help button, and robustness fixes (below). One technician runs `docs/technician/release-check.md` (shipped in the
+package as "Release check.txt") on a PC with 0.6.0 before it goes to everyone. The shared parameters being agreed with
+the technicians need no add-in release: no parameter name is written in the add-in.
 
 ## How work lands here
 
@@ -179,16 +188,20 @@ add-in's.
 
 ```
 src/Addin/            Revit add-in, configurations R24 and R26 (others when needed)
-  App.cs              starts with Revit: the ribbon tab, and the snapshot after each Synchronize with Central
-  Commands/           SyncCommand (Sync to website), RawDumpCommand; both read-only
+  App.cs              starts with Revit: the snapshot after each Synchronize with Central, then the ribbon tab
+  Commands/           SyncCommand (Sync to website), RawDumpCommand, HelpCommand; all read-only
+  Ribbon/, Resources/ RibbonIcons loads the icons embedded from Resources/Icons (light and dark, 32 and 16 px)
+  UploaderSettingsFile.cs, AddinSettings.cs   pure: the website's address for Help; the after-sync switch
   Shapes/             ShapeOutbox and ShapeReader (Revit); ShapeMesh and ShapeFile (pure, tested): the "shapes-1" file
   Snapshots/          SnapshotReader (Revit), SnapshotJson and SnapshotOutbox (pure, tested)
   RawDump/            RawDumpWriter: the F-004 dump, format "raw-dump-1"
   Json/, Units/       pure code (no Revit API), compiled into the tests by path
   RevitApi/           ElementIds: the one place an ElementId becomes a number
 tests/Addin.Tests/    xUnit, pure source compiled in by path
-installer/            Install.cmd + Install-Addin.ps1, shipped in the hand-off package
-docs/technician/      the one-page instruction sheets that go to the BIM technician
+installer/            Install.cmd + Install-Addin.ps1 + Move-FormerInstall.ps1, shipped in the hand-off package
+docs/technician/      sync-instructions.md (the sheet: READ ME FIRST, and Help opens it) and release-check.md
+tools/                Draw-RibbonIcons.ps1: draws the icon PNGs from outlines; -Preview shows them on both themes
+.github/              CI, and the pull request form contributors fill in
 Build-Package.ps1     builds the hand-off package into artifacts/ (not committed)
 src/Contracts/        snapshot classes v1 (netstandard2.0); compiled into the add-in and the website by path
 src/Uploader/         sends the outbox to the website (.NET 8 console, no packages); --once, --site, --outbox
@@ -229,7 +242,17 @@ _harnesses/           throwaway probes, never part of a build
   address and password (Adnan gives them; never in the package), puts a shortcut in the user's Startup folder and
   starts it. It needs .NET 8 (Revit 2025 and 2026 install it); the installer says so when it is missing. Microsoft
   sign-in replaces the password later. **Not yet run on a modeller's PC**, and the installer's uploader steps were
-  not run here (they write to the real Startup folder).
+  not run here (they write to the real Startup folder). Its log starts again past 5 MB (keeping
+  `uploader.previous.log`), and writing it can never end the uploader. Shapes whose snapshot was refused follow it to
+  `Rejected` (the website would answer 409 to them for ever). `Outbox\Sent` is never emptied (about 1.5 MB per sync).
+- **The ribbon** (0.7.0): tab `<product>`, panels Quantities (Sync to website, Raw dump) and Help. The after-sync
+  handler is hooked up before the ribbon is built, and the ribbon is built inside a try, so nothing on it can cost a
+  snapshot. Icons: one flat colour per theme, chosen from `UIThemeManager.CurrentTheme` and swapped on `ThemeChanged`
+  (both in the 2024 and 2026 API; called from `NoInlining` methods inside a try). **Help** works with no model open
+  (`AlwaysAvailable`): version, the after-sync switch, snapshots still waiting in the outbox, and links to the website
+  (`siteAddress` from `uploader.json`; the add-in never reads the password), the instruction sheet installed beside the
+  DLL as `<product> instructions.txt`, the outbox and the logs. A failed Sync to website is logged and said in a plain
+  dialog.
 - The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.
 - A cloud model can't be opened in a newer Revit without upgrading it for everyone, so a Revit step always
   runs in the model's own Revit year; the instruction sheets say so.
