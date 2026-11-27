@@ -1,8 +1,9 @@
 # Telltale 0.7: the release check, for one BIM technician
 
 One technician runs this once, on a PC that has an **earlier version (RevitVolumeCost, any version)** installed, before 0.7
-goes to everyone. It takes about 20 minutes. It checks the rename, the new buttons (Parameter standard and Help), and (for the first time in Revit) the
-3D shapes sent after a Synchronize with Central. Write down what you see at each step and send it to Adnan with the
+goes to everyone. It takes about 20 minutes, plus section F later on the same day. It checks the rename, the new buttons
+(Parameter standard and Help), (for the first time in Revit) the 3D shapes sent after a Synchronize with Central, and
+the automatic update to a test version Adnan releases for this check. Write down what you see at each step and send it to Adnan with the
 files listed at the end.
 
 ## A. Before installing: leave one snapshot unsent
@@ -17,9 +18,11 @@ files listed at the end.
    **Expected:** lines saying it removed the old RevitVolumeCost files and moved its folders, and **no** question
    about the website address or password. If it asks for them, write that down, then type them in.
 5. **Expected** afterwards:
-   - `%AppData%\Autodesk\Revit\Addins\2026` holds **Telltale.addin** and a **Telltale** folder, and no
+   - `%AppData%\Autodesk\Revit\Addins\2026` holds **Telltale.addin** and a **Telltale** folder (with a **0.7.0** folder
+     inside), and no
      RevitVolumeCost.addin or RevitVolumeCost folder. The same in `...\2024` if the PC has Revit 2024.
-   - The Startup folder (Windows key + R, `shell:startup`) holds **Telltale uploader** and no RevitVolumeCost uploader.
+   - Task Manager > **Startup apps** lists **Telltale uploader** (enabled). The Startup folder (Windows key + R,
+     `shell:startup`) has no RevitVolumeCost uploader.
    - Task Manager > Details shows **Telltale.Uploader.exe** and no RevitVolumeCost.Uploader.exe.
    - Within two minutes, the file from step 3 is in `%LocalAppData%\Telltale\Outbox\Sent`.
 
@@ -37,7 +40,8 @@ files listed at the end.
    opens in the browser, the instructions sheet opens, then the outbox folder, then the logs folder.
 9. Press **Parameter standard** (still no model open). **Expected:** a window listing the five parameters as agreed on
    27 Nov, with **Roof** among the Division_Shared values and **Upstand** among the Wall Function_Shared values, then the
-   settings, rules and examples. Check every name and value against the Excel sheet and note any difference. Select a
+   settings, rules and examples. Write down what the line under the title says: "From the website" or "Built into this
+   add-in". Check every name and value against the Excel sheet and note any difference. Select a
    value, copy it (Ctrl + C) and paste it into a parameter in Revit to check it pastes exactly. Close the window with
    Close or Esc.
 
@@ -52,9 +56,25 @@ files listed at the end.
 
 12. Repeat steps 6, 8, 9 and 10 in Revit 2024 with a model of that year. Revit 2024 has not run this add-in yet.
 
+## F. The automatic update (later the same day, with Adnan)
+
+13. Open Revit 2026 with any model, and keep it open. Tell Adnan you have reached this step; he releases a test version,
+    **0.7.1**, on the website and tells you when. Then make the uploader check at once (it also checks every hour by
+    itself): Task Manager > **Details**, right-click **Telltale.Uploader.exe** > **End task**, then double-click
+    `%LocalAppData%\Telltale\Uploader\0.7.0\Telltale.Uploader.exe` (nothing shows; it runs in the background).
+14. Go back to Revit and leave it idle for up to 10 minutes. **Expected:** a message
+    **"New version of Telltale Addin ready, restart Revit please"**, once. Write down how long it took to appear and
+    whether it came back after you closed it (it should not).
+15. Check `%AppData%\Autodesk\Revit\Addins\2026\Telltale`: it should hold a **0.7.0** and a **0.7.1** folder.
+16. Close Revit and start it again. **Expected:** Help shows **0.7.1**. Write down whether Revit asked the unsigned
+    add-in question again, and whether antivirus or Windows warned about anything.
+17. Task Manager > **Details**, right-click **Telltale.Uploader.exe** > **Open file location**. **Expected:** the folder
+    is `...\Telltale\Uploader\0.7.1`. Press **Parameter standard**: the line under the title should now say "From the
+    website".
+
 ## Send back to Adnan
 
 - What you saw at each step, especially anything that differed from "Expected".
 - The screenshots from steps 6 and 7.
-- `addin.log` and `uploader.log` (Help > Show the logs folder).
+- `addin.log` and `uploader.log` (Help > Show the logs folder), after section F.
 - Revit's exact build for each year used (in Revit: the ? menu > About).

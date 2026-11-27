@@ -5,6 +5,10 @@ buttons have icons, a **Parameter standard** button shows the parameters to fill
 0.7 removes the old RevitVolumeCost add-in and uploader by itself and keeps your settings: you are not asked for the
 password again, and snapshots not yet sent are sent.
 
+**From 0.7, new versions install themselves.** The uploader fetches each new version Adnan releases and installs it
+in the background. When one is ready, Revit shows **"New version of Telltale Addin ready, restart Revit please"**:
+finish what you are doing, close Revit and start it again. You won't need to run Install.cmd again.
+
 The add-in takes a snapshot of the model's quantities, with its 3D shapes, **by itself after every successful
 Synchronize with Central** on a cloud (ACC) model. Nothing pops up. Revit is busy for a few seconds after each sync while
 it reads (about 5 to 12 seconds on a large tower). **It changes nothing in the model.** A small program, the
@@ -56,13 +60,16 @@ them for 90 days (the website keeps its own copy) and then deletes them.
 - To switch the automatic snapshot off on one PC: create the file `%AppData%\Telltale\addin.json` containing
   `{ "snapshotAfterSync": false }` and restart Revit. Delete the file to switch it back on. Help shows which it is.
 - "The uploader needs .NET 8" when installing: the PC has only Revit 2024. Tell Adnan; the snapshots wait in the
-  Outbox.
+  Outbox, and this PC gets no new versions by itself.
+- The **Parameter standard** window says at the top whether it shows the website's copy or the one built into the
+  add-in. It shows the built-in one until the uploader has fetched the website's copy (within an hour of the uploader
+  starting).
 
 The snapshot and shapes files hold the model's data, so send them to Adnan only. Keep the site password to yourself.
 
 ## Afterwards
 
 To remove the add-in, close Revit and delete **Telltale.addin** and the **Telltale** folder from
-`%AppData%\Autodesk\Revit\Addins\2024` (and `...\2026`). To remove the uploader, delete **Telltale uploader** from your
-Startup folder (Windows key + R, type `shell:startup`), sign out and back in, then delete
+`%AppData%\Autodesk\Revit\Addins\2024` (and `...\2026`). To remove the uploader, open Task Manager (Ctrl + Shift + Esc) >
+**Startup apps**, right-click **Telltale uploader** > **Disable**, sign out and back in, then delete
 `%LocalAppData%\Telltale\Uploader`.

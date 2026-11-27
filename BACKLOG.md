@@ -127,6 +127,8 @@ code), `Commands/ParameterStandardCommand.cs`, the Parameter standard button in 
 **Progress (2026-11-27):** Built into 0.7.0: 7 tests on the standard (the five names, Roof, Upstand, blanks, no stray
 spaces), compiles for Revit 2024 and 2026, the window rendered outside Revit and looked at. Not yet seen in Revit. Every
 later change to the standard is a change here, in the Excel sheet and on the website.
+**Progress (2026-11-27, later):** The window now shows the website's copy (fetched by the uploader, F-007) when complete,
+else the built-in one, and says which; checked on .NET Framework with the Revit 2024 build.
 
 ### [F-006] P3 — Check the open model against the standard (proposed, engineer's call)
 <!-- type: feature | added: 2026-11-27 -->
@@ -137,19 +139,32 @@ holding a value not on the list (a misspelling the website would show as "Unassi
 **Acceptance:** On a test model with known blanks and misspellings the counts are right and Select highlights them.
 **Notes:** Not asked for: offered on 2026-11-27. Read-only. Ships only in a batched release.
 
-### [T-004] P3 — One copy of the standard for the add-in and the website (proposed, engineer's call)
-<!-- type: tech debt | added: 2026-11-27 -->
-**What:** Move `ParameterStandard.cs` into `src/Contracts`, which the website already compiles in, so the website reads its
-parameter names and allowed values from the same file as the add-in's window.
-**Why:** Today the standard lives in three places (the Excel sheet, this add-in, the website's settings and rules), so a
-change made in one can be missed in another.
-**Where:** `src/Contracts/`, and the website repo's classification rules and `addin-ref.txt` pin.
-**Acceptance:** The website builds against the moved file and its rules use its lists; the add-in window is unchanged.
-**Notes:** Touches `src/Contracts`, so it needs the engineer's say-so and a matching website change (CLAUDE.md "How work lands here").
+### [F-007] P1 — Updates through the uploader (built in 0.7.0, awaiting its first real update)
+<!-- type: feature | added: 2026-11-27 -->
+**What:** The uploader asks the website for the newest release Adnan has published, downloads and checks it, installs it
+beside the running version and points each installed Revit year's manifest at it; Revit then shows "New version of
+Telltale Addin ready, restart Revit please" once. The uploader updates itself, and fetches the parameter standard for
+the Parameter standard window.
+**Why:** Engineer, 2026-11-27: agreed to updates through the uploader so 0.7.0 is the last zip handed out, the parameter
+window reads the standard from the site, and the technician sees that note (not a silent install).
+**Where:** `src/Uploader/UpdateCheck.cs`, `AddinUpdates.cs`; `src/Addin/Updates/`; `Manifest.addin.template`
+(`$Version$`); `installer/Install-Addin.ps1` (version folders, Run entry); `Build-Package.ps1 -Version`; website repo
+for the endpoints and "Publish add-in.cmd". CLAUDE.md "Updates" has the design.
+**Acceptance:** On a technician's PC with 0.7.0, a published test 0.7.1 is installed by itself, the note shows once in an
+open Revit, the next Revit start runs 0.7.1, the uploader runs from `Uploader\0.7.1` and starts from there at sign-in
+(release check section F).
+**Progress (2026-11-27):** Built and committed. 23 new unit tests; `tests/Updates/Test-UpdateEndToEnd.ps1` passed (a real
+0.7.0 uploader updated scratch folders to a 0.7.1 test package from a stand-in site, 17 checks: manifest repointed, old
+version kept, Revit 2024 left alone when not installed, uploader staged, standard saved, a second run idle, a corrupted
+download installing nothing, a site that is down changing nothing). The website side is committed (website repo e19227c,
+976a4a1), not live until a site restart Adnan approves. Not checked: Revit itself, the uploader hand-over and Run entry
+(they act on the real registry and processes), antivirus. Open, for the engineer: whether to sign releases (the hash
+proves the download is whole, not who made it; the site is plain http).
 
 ## Done
 
 - [[F-002]](docs/backlog-archive.md#f-002-division-element-kind-and-concrete-grade-conventions) Conventions agreed: a parameter standard the technicians follow — 2026-11-26
+- [[T-004]](docs/backlog-archive.md#t-004-one-copy-of-the-standard-for-the-add-in-and-the-website) Done another way: the website's tests compile `ParameterStandard.cs` and check its copy matches — 2026-11-27
 - [[T-002]](docs/backlog-archive.md#t-002-how-long-outboxsent-keeps-sent-files) Sent files kept 90 days, then deleted (0.7.0) — 2026-11-27
 - [[T-003]](docs/backlog-archive.md#t-003-raw-dump-out-of-sight-on-the-ribbon) Raw dump moved to the Quantities panel's slide-out (0.7.0) — 2026-11-27
 - [[F-004]](docs/backlog-archive.md#f-004-raw-dump-of-a-real-tower) Raw dump of a real tower: ran, matched Revit's takeoff, snapshot classes v1 written from it — 2026-11-26

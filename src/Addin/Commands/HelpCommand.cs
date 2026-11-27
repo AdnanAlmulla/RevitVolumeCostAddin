@@ -29,7 +29,8 @@ namespace Addin.Commands
 
             var dialog = new TaskDialog(productName + " help")
             {
-                MainInstruction = productName + " " + AddinInfo.Version,
+                // The release number alone, without the build's commit suffix ("0.7.0", not "0.7.0+4c151c4...").
+                MainInstruction = productName + " " + (Updates.ReleaseVersions.Parse(AddinInfo.Version)?.ToString() ?? AddinInfo.Version),
                 MainContent =
                     "Takes a snapshot of this model's quantities after each Synchronize with Central on an ACC model, and " +
                     "when you press Sync to website. The uploader sends each snapshot to the website. Nothing in the model is changed.\n\n" +

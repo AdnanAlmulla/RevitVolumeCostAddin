@@ -2,6 +2,19 @@
 
 Full records of landed `BACKLOG.md` items, newest first.
 
+## [T-004] One copy of the standard for the add-in and the website
+<!-- type: tech debt | added: 2026-11-27 -->
+**What:** Move `ParameterStandard.cs` into `src/Contracts`, which the website already compiles in, so the website reads its
+parameter names and allowed values from the same file as the add-in's window.
+**Why:** Today the standard lives in three places (the Excel sheet, this add-in, the website's settings and rules), so a
+change made in one can be missed in another.
+**Where:** `src/Contracts/`, and the website repo's classification rules and `addin-ref.txt` pin.
+**Acceptance:** The website builds against the moved file and its rules use its lists; the add-in window is unchanged.
+**Notes:** Touches `src/Contracts`, so it needs the engineer's say-so and a matching website change (CLAUDE.md "How work lands here").
+**Result (2026-11-27):** Done another way, without touching `src/Contracts`: the website serves the standard to the uploader
+(F-007), and its tests compile `ParameterStandard.cs` and `StandardContent.cs` by path and fail when the site's copy
+differs from the add-in's (website thread). CLAUDE.md "How work lands here" says to keep both files in place.
+
 ## [T-002] How long Outbox\Sent keeps sent files
 <!-- type: tech debt | added: 2026-11-27 -->
 **What:** The uploader moves every sent snapshot and shapes file to `%LocalAppData%\<product>\Outbox\Sent` and never

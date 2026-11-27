@@ -57,12 +57,16 @@ at the moment beyond 0.7.0.
 
 **Where things stand (2026-11-27):** **0.7.0 is built and committed, not handed out, not run in Revit.** It batches
 0.6.0's untested shapes-after-sync with the rename to Telltale (T-001), ribbon icons for Revit's light and dark themes,
-a Help button, a Parameter standard window, Raw dump moved out of sight, sent files kept 90 days, and robustness fixes (below). One technician runs `docs/technician/release-check.md` (shipped in the
+a Help button, a Parameter standard window, **updates through the uploader** (below), Raw dump moved out of sight, sent
+files kept 90 days, and robustness fixes (below). **0.7.0 is meant to be the last zip handed out** (engineer, 2026-11-27):
+that holds only once a real update has run on a technician's PC (release check section F, with a test 0.7.1 that Adnan
+publishes; the next real release is then 0.7.2 or later). One technician runs `docs/technician/release-check.md` (shipped in the
 package as "Release check.txt") on a PC with 0.6.0 before it goes to everyone. The shared parameters being agreed with
-the technicians never break the snapshot: it names no parameter and sends them all. But the **Parameter standard**
-window carries the standard as agreed on 27 Nov 2026 (`src/Addin/Standard/ParameterStandard.cs`, engineer: "the plugin
-needs to carry the identity of the latest instance parameters"), so a changed standard needs a new add-in version for the
-window to show it, and the same change in the Excel sheet (website repo) and on the website.
+the technicians never break the snapshot: it names no parameter and sends them all. The **Parameter standard** window
+shows the website's copy of the standard when the uploader has fetched one, else the copy built in
+(`src/Addin/Standard/ParameterStandard.cs`, as agreed on 27 Nov 2026; engineer: "the plugin needs to carry the identity
+of the latest instance parameters"), and says which. So a change to the standard reaches the technicians through the
+website; the built-in copy and the Excel sheet should follow it.
 
 ## How work lands here
 
@@ -73,6 +77,11 @@ window to show it, and the same change in the Excel sheet (website repo) and on 
 - **`src/Contracts` is shared with the website.** The website repo builds against a clone of this repo
   placed beside it, so a change to a snapshot class changes what the API receives. Keep changes additive
   (new optional fields); renaming or removing a field needs the engineer's say-so in the pull request.
+- **The website's tests also compile `src/Addin/Standard/ParameterStandard.cs` and `StandardContent.cs` by path**
+  (website thread, 2026-11-27): one test checks the site's standard equals `ParameterStandard`'s `AGREED_ON`,
+  `PARAMETER_SETTINGS`, `RULES`, `EXAMPLES` and `PARAMETERS` word for word, another that `ParameterStandardFile.Read`
+  accepts the site's JSON. Keep both files pure (no Revit, no WPF), keep those names, and don't move them: otherwise the
+  website's whole test project stops compiling. A change to the built-in standard must match the website's.
 
 ## What the add-in does (engineer's rulings, 2026-11-25)
 
@@ -193,7 +202,8 @@ add-in's.
 src/Addin/            Revit add-in, configurations R24 and R26 (others when needed)
   App.cs              starts with Revit: the snapshot after each Synchronize with Central, then the ribbon tab
   Commands/           SyncCommand (Sync to website), ParameterStandardCommand, RawDumpCommand, HelpCommand; all read-only
-  Standard/           ParameterStandard (pure, tested): the parameter standard, written once; ParameterStandardWindow (WPF, in code)
+  Standard/           ParameterStandard, StandardContent (pure, tested; the website's tests compile both); ParameterStandardWindow (WPF, in code)
+  Updates/            ReleaseVersions (pure, tested; the uploader compiles it too); UpdateNotice: the "restart Revit" note
   Ribbon/, Resources/ RibbonIcons loads the icons embedded from Resources/Icons (light and dark, 32 and 16 px)
   UploaderSettingsFile.cs, AddinSettings.cs   pure: the website's address for Help; the after-sync switch
   Shapes/             ShapeOutbox and ShapeReader (Revit); ShapeMesh and ShapeFile (pure, tested): the "shapes-1" file
@@ -209,7 +219,9 @@ tools/                Draw-RibbonIcons.ps1: draws the icon PNGs from outlines; -
 .github/              CI, and the pull request form contributors fill in
 Build-Package.ps1     builds the hand-off package into artifacts/ (not committed)
 src/Contracts/        snapshot classes v1 (netstandard2.0); compiled into the add-in and the website by path
-src/Uploader/         sends the outbox to the website (.NET 8 console, no packages); --once, --site, --outbox
+src/Uploader/         sends the outbox to the website (.NET 8, no packages); --once, --site, --outbox, --local-app-data,
+                      --roaming-app-data; UpdateCheck (network) and AddinUpdates (file work, tested) install updates
+tests/Updates/        Test-UpdateEndToEnd.ps1 + stub_site.py: a real uploader updates scratch folders from a stand-in site
 _harnesses/           throwaway probes, never part of a build
 ```
 
@@ -243,8 +255,8 @@ _harnesses/           throwaway probes, never part of a build
   `X-Site-Password` header (the website's gate, 2026-11-26), moves it to `Sent` or (refused) `Rejected` with the reason,
   and retries anything else every minute, a refused password (401, 403) included: the setting is wrong, not the file.
   It is a windowless program (`WinExe`) logging to `%LocalAppData%\<product>\Logs\uploader.log`, one copy per user (a
-  named mutex); a pass that fails (a mistyped setting) is logged and tried again. `Install.cmd` copies it to `%LocalAppData%\<product>\Uploader\`, asks the technician once for the
-  address and password (Adnan gives them; never in the package), puts a shortcut in the user's Startup folder and
+  named mutex); a pass that fails (a mistyped setting) is logged and tried again. `Install.cmd` copies it to `%LocalAppData%\<product>\Uploader\<version>\`, asks the technician once for the
+  address and password (Adnan gives them; never in the package), sets the user's Run entry `<product> uploader` and
   starts it. It needs .NET 8 (Revit 2025 and 2026 install it); the installer says so when it is missing. Microsoft
   sign-in replaces the password later. **Not yet run on a modeller's PC**, and the installer's uploader steps were
   not run here (they write to the real Startup folder). Its log starts again past 5 MB (keeping
@@ -264,6 +276,30 @@ _harnesses/           throwaway probes, never part of a build
   (`siteAddress` from `uploader.json`; the add-in never reads the password), the instruction sheet installed beside the
   DLL as `<product> instructions.txt`, the outbox and the logs. A failed Sync to website is logged and said in a plain
   dialog.
+- **Updates** (engineer, 2026-11-27: "new version of Telltale Addin ready, restart Revit please"; Adnan decides when a
+  version is released by publishing its zip on the website, website repo "Publish add-in.cmd"). Each version lives in
+  its own folder, `Addins\<year>\<product>\<version>\` and `%LocalAppData%\<product>\Uploader\<version>\`, and the
+  manifest's Assembly path names it (`Manifest.addin.template`, `$Version$`). The uploader (`UpdateCheck`) asks
+  `GET /api/addin/latest` ({version, sha256, size, releasedAt}; 404 when none) at start and hourly, with the site
+  password; for a newer version it downloads `/api/addin/download/{version}` (the zip exactly as `Build-Package.ps1`
+  writes it), checks size and SHA-256, unpacks it under a temporary name, copies the version folder beside the running
+  one for each Revit year whose manifest exists (never adds a year), then replaces the manifest in one step: Revit reads
+  it only at start, so the next start loads the new version even while this session holds the old DLL. The version
+  before is kept; older ones are deleted when nothing holds them. The uploader updates itself the same way: it starts its
+  successor with `--after <its process id>`, ends only if the successor is still up 10 s later (else carries on and skips
+  that version until it restarts), and the successor repoints the user's Run entry `<product> uploader` (set by the
+  installer; a missing entry is left missing) after its first full pass. In Revit, `UpdateNotice` (on Idling, at most
+  every 5 minutes, in a try) shows the note once per session when the manifest points past the running version. It also
+  saves `GET /api/parameter-standard` to `%LocalAppData%\<product>\parameter-standard.json`; the window reads it with
+  `DataContractJsonSerializer` (part of .NET Framework and .NET 8: no file shipped) and shows it only when complete
+  (version, date, each parameter with a name, values and categories), else the built-in copy. `Build-Package.ps1
+  -Version x.y.z` builds a test release. Trial runs (`--once` or the folder overrides) install into the folders but never
+  touch the registry or restart. **Checked:** unit tests, and `tests/Updates/Test-UpdateEndToEnd.ps1` (a real 0.7.0
+  uploader updated scratch folders to a 0.7.1 test package from a stand-in site: 17 checks, a corrupted download and a
+  site that is down included). **Not checked:** anything in Revit (the note, a version-folder manifest path, loading
+  the new version), the hand-over to a new uploader and the Run entry (never run here: they act on the real registry and
+  processes), and antivirus. The hash proves the download is whole, not who made it: the site is plain http and the
+  files are unsigned. A PC without .NET 8 has no uploader, so no updates.
 - The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.
 - A cloud model can't be opened in a newer Revit without upgrading it for everyone, so a Revit step always
   runs in the model's own Revit year; the instruction sheets say so.
