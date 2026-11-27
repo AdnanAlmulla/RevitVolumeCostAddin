@@ -15,6 +15,21 @@ namespace Uploader
 
     public static class UploadRules
     {
+        // The add-in writes "<name>.snapshot.json.gz" and its 3D shapes beside it as "<name>.shapes.json.gz"
+        // (src/Addin/Snapshots/SnapshotOutbox.cs, src/Addin/Shapes/ShapeFile.cs).
+        public const string SNAPSHOT_FILE_EXTENSION = ".snapshot.json.gz";
+        public const string SHAPES_FILE_EXTENSION = ".shapes.json.gz";
+
+        /// <summary>
+        /// The file name of the snapshot a shapes file belongs to. When the website refused that snapshot, it answers 409
+        /// to its shapes for ever, so the shapes follow the snapshot to Rejected instead of being tried every minute.
+        /// </summary>
+        public static string SnapshotFileNameOf(string shapesFileName)
+        {
+            string name = shapesFileName.Substring(0, shapesFileName.Length - SHAPES_FILE_EXTENSION.Length);
+            return name + SNAPSHOT_FILE_EXTENSION;
+        }
+
         /// <summary>
         /// What one try at sending a snapshot means. No answer at all (the site is down, the PC is offline), a server
         /// error, a timeout or "too many requests" are worth retrying. So is a refused password (401, 403): it is this

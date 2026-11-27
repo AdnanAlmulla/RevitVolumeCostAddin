@@ -28,10 +28,26 @@ namespace Addin.Commands
             }
 
             Stopwatch totalTime = Stopwatch.StartNew();
-            Snapshot snapshot = SnapshotReader.Read(document, commandData.Application.Application, SnapshotTriggers.MANUAL_SYNC, AddinInfo.Version);
-            string outboxFolder = SnapshotOutbox.FolderFor(AddinInfo.ProductName);
-            string snapshotPath = SnapshotOutbox.Write(snapshot, outboxFolder);
-            string shapesNote = WriteShapes(document, snapshot, snapshotPath);
+            Snapshot snapshot;
+            string snapshotPath;
+            string shapesNote;
+            try
+            {
+                snapshot = SnapshotReader.Read(document, commandData.Application.Application, SnapshotTriggers.MANUAL_SYNC, AddinInfo.Version);
+                string outboxFolder = SnapshotOutbox.FolderFor(AddinInfo.ProductName);
+                snapshotPath = SnapshotOutbox.Write(snapshot, outboxFolder);
+                shapesNote = WriteShapes(document, snapshot, snapshotPath);
+            }
+            catch (Exception exception)
+            {
+                // Such as a full disk. Said in plain words and logged, instead of Revit's own error window.
+                string reason = exception.GetType().Name + ": " + exception.Message;
+                AddinInfo.Log("Manual sync: no snapshot, " + reason);
+                TaskDialog.Show("Sync to website",
+                    "No snapshot was taken.\n\n" + reason + "\n\nNothing in the model was changed. If it happens again, send " +
+                    "addin.log (Help > Show the logs folder) to Adnan.");
+                return Result.Cancelled;
+            }
             totalTime.Stop();
             AddinInfo.Log($"Manual sync: {snapshot.Elements.Count} elements ({snapshot.UnreadableElementCount} unreadable), read {snapshot.ReadSeconds:0.0} s, {shapesNote}, total {totalTime.Elapsed.TotalSeconds:0.0} s, {snapshotPath}");
 

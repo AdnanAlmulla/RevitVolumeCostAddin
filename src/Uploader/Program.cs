@@ -14,15 +14,18 @@ using Uploader;
 // read again at every pass, so a corrected setting is used within a minute. It has no window: what it does goes to
 // %LocalAppData%\<product>\Logs\uploader.log.
 
-const string SNAPSHOT_FILE_PATTERN = "*.snapshot.json.gz";
+const string SNAPSHOT_FILE_PATTERN = "*" + UploadRules.SNAPSHOT_FILE_EXTENSION;
 const string SNAPSHOT_UPLOAD_PATH = "/api/snapshots";
 // Each snapshot's 3D shapes, written beside it by the add-in, go to their own address, after the snapshots: the
 // website files shapes under the model a snapshot named.
-const string SHAPES_FILE_PATTERN = "*.shapes.json.gz";
+const string SHAPES_FILE_PATTERN = "*" + UploadRules.SHAPES_FILE_EXTENSION;
 const string SHAPES_UPLOAD_PATH = "/api/shapes";
 // The website's header for its site password (the website repo's SiteGate.PASSWORD_HEADER).
 const string SITE_PASSWORD_HEADER = "X-Site-Password";
 const string DEFAULT_SITE_ADDRESS = "http://localhost:5080";
+// The log keeps going for months on a modeller's PC, a line a minute per file while the website is down: past this size
+// it starts again, and the previous one is kept as uploader.previous.log.
+const long LOG_SIZE_LIMIT_BYTES = 5L * 1024 * 1024;
 TimeSpan timeBetweenPasses = TimeSpan.FromMinutes(1);
 TimeSpan uploadTimeout = TimeSpan.FromMinutes(2);
 
@@ -89,6 +92,14 @@ async Task SendOutboxAsync()
     }
     foreach (string shapesPath in shapesPaths)
     {
+        string shapesFileName = Path.GetFileName(shapesPath);
+        string refusedSnapshotPath = Path.Combine(rejectedFolder, UploadRules.SnapshotFileNameOf(shapesFileName));
+        if (File.Exists(refusedSnapshotPath))
+        {
+            File.Move(shapesPath, Path.Combine(rejectedFolder, shapesFileName), overwrite: true);
+            Log($"refused {shapesFileName}: its snapshot was refused");
+            continue;
+        }
         await SendAsync(http, shapesPath, SHAPES_UPLOAD_PATH);
     }
 }
@@ -129,11 +140,24 @@ async Task SendAsync(HttpClient client, string filePath, string uploadPath)
     }
 }
 
+// A log that can't be written must never stop the uploader: it is called from the loop's own catch.
 void Log(string line)
 {
     string stampedLine = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {line}";
     Console.WriteLine(stampedLine);
-    File.AppendAllText(logPath, stampedLine + Environment.NewLine);
+    try
+    {
+        var logFile = new FileInfo(logPath);
+        if (logFile.Exists && logFile.Length > LOG_SIZE_LIMIT_BYTES)
+        {
+            File.Move(logPath, Path.Combine(logFile.DirectoryName!, "uploader.previous.log"), overwrite: true);
+        }
+        File.AppendAllText(logPath, stampedLine + Environment.NewLine);
+    }
+    catch (Exception)
+    {
+        // Nothing else to tell: the uploader has no window.
+    }
 }
 
 string? ArgumentAfter(string name)
