@@ -41,5 +41,42 @@ namespace Addin.Snapshots
             File.Move(partialPath, finalPath);
             return finalPath;
         }
+
+        /// <summary>
+        /// The snapshots still waiting in the outbox for the uploader (the ones it sent are in Outbox\Sent), and when the
+        /// oldest was written, for the Help button. A file that stays shows the uploader is not reaching the website.
+        /// </summary>
+        public static OutboxWaiting Waiting(string outboxFolder)
+        {
+            if (!Directory.Exists(outboxFolder))
+            {
+                return new OutboxWaiting(0, null);
+            }
+            string[] waitingPaths = Directory.GetFiles(outboxFolder, "*" + SNAPSHOT_FILE_EXTENSION);
+            DateTime? oldestWrittenAtLocal = null;
+            foreach (string waitingPath in waitingPaths)
+            {
+                DateTime writtenAtLocal = File.GetLastWriteTime(waitingPath);
+                if (oldestWrittenAtLocal == null || writtenAtLocal < oldestWrittenAtLocal)
+                {
+                    oldestWrittenAtLocal = writtenAtLocal;
+                }
+            }
+            return new OutboxWaiting(waitingPaths.Length, oldestWrittenAtLocal);
+        }
+    }
+
+    /// <summary>How many snapshots wait in the outbox, and when the oldest was written (this PC's time).</summary>
+    public sealed class OutboxWaiting
+    {
+        public OutboxWaiting(int snapshotCount, DateTime? oldestWrittenAtLocal)
+        {
+            SnapshotCount = snapshotCount;
+            OldestWrittenAtLocal = oldestWrittenAtLocal;
+        }
+
+        public int SnapshotCount { get; }
+
+        public DateTime? OldestWrittenAtLocal { get; }
     }
 }

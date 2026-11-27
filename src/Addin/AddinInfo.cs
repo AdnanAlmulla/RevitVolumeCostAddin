@@ -20,6 +20,17 @@ namespace Addin
         public static string AssemblyPath => ADDIN_ASSEMBLY.Location;
 
         /// <summary>
+        /// The technician's instruction sheet, installed beside the DLL by the package (Build-Package.ps1), opened by the
+        /// Help button. Missing in a developer's own build.
+        /// </summary>
+        public static string InstructionSheetPath =>
+            Path.Combine(Path.GetDirectoryName(AssemblyPath) ?? "", ProductName + " instructions.txt");
+
+        /// <summary>%LocalAppData%\&lt;product&gt;\Logs: the add-in's log and the uploader's.</summary>
+        public static string LogFolder =>
+            Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), ProductName, "Logs");
+
+        /// <summary>
         /// One line per snapshot or failure in %LocalAppData%\&lt;product&gt;\Logs\addin.log: the technician sends it back
         /// with the snapshot, and it times each read (the "a sync is not slowed" check). Logging never stops Revit.
         /// </summary>
@@ -27,8 +38,7 @@ namespace Addin
         {
             try
             {
-                string localAppData = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-                string logFolder = Path.Combine(localAppData, ProductName, "Logs");
+                string logFolder = LogFolder;
                 Directory.CreateDirectory(logFolder);
                 string stamped = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + "  " + line + Environment.NewLine;
                 File.AppendAllText(Path.Combine(logFolder, "addin.log"), stamped);

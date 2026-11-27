@@ -16,6 +16,7 @@
     <Compile Include="..\..\src\Addin\Snapshots\SnapshotOutbox.cs" Link="Pure\SnapshotOutbox.cs" />
     <Compile Include="..\..\src\Uploader\UploadRules.cs" Link="Pure\UploadRules.cs" />
     <Compile Include="..\..\src\Addin\AddinSettings.cs" Link="Pure\AddinSettings.cs" />
+    <Compile Include="..\..\src\Addin\UploaderSettingsFile.cs" Link="Pure\UploaderSettingsFile.cs" />
     <Compile Include="..\..\src\Addin\Shapes\ShapeMesh.cs" Link="Pure\ShapeMesh.cs" />
     <Compile Include="..\..\src\Addin\Shapes\ShapeFile.cs" Link="Pure\ShapeFile.cs" />
     <Compile Include="..\..\src\Contracts\*.cs" Link="Contracts\%(Filename)%(Extension)" />
