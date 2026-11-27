@@ -11,9 +11,11 @@
 #   1. stops the old uploader and waits for it to end, and deletes its Startup shortcut;
 #   2. deletes the old .addin manifest and add-in folder from every %AppData%\Autodesk\Revit\Addins\<year>\;
 #   3. %AppData%\<old>\ (uploader.json with the site address and password, addin.json): renamed to the current name
-#      when the current one does not exist yet; otherwise each settings file the current name lacks is moved across;
+#      when the current one does not exist yet; otherwise, or when the rename fails, each settings file the current
+#      name lacks is moved across;
 #   4. %LocalAppData%\<old>\ (Outbox with Sent and Rejected, Logs): renamed likewise, without the old uploader program;
-#      otherwise each complete snapshot and shapes file still waiting in the old Outbox is moved to the current one.
+#      otherwise, or when the rename fails, each complete snapshot and shapes file still waiting in the old Outbox is
+#      moved to the current one.
 # A file that already exists under the current name is never overwritten, so running the installer twice is safe.
 # The old Documents\<old>\Raw dumps folder is left where it is: it holds the technician's own files.
 
@@ -56,10 +58,9 @@ function Move-FormerInstall {
         $formerSettingsFolder = Join-Path $RoamingAppDataFolder $formerName
         $settingsFolder = Join-Path $RoamingAppDataFolder $ProductName
         if (Test-Path $formerSettingsFolder) {
-            if (-not (Test-Path $settingsFolder)) {
-                Move-FolderTo $formerSettingsFolder $settingsFolder
-            }
-            else {
+            $isRenamed = (-not (Test-Path $settingsFolder)) -and (Move-FolderTo $formerSettingsFolder $settingsFolder)
+            if (-not $isRenamed -and $PSCmdlet.ShouldProcess($settingsFolder, 'Carry the settings files over')) {
+                New-Item -ItemType Directory -Force -Path $settingsFolder | Out-Null
                 foreach ($settingsFileName in 'uploader.json', 'addin.json') {
                     Move-FileIfAbsent (Join-Path $formerSettingsFolder $settingsFileName) (Join-Path $settingsFolder $settingsFileName)
                 }
@@ -71,23 +72,23 @@ function Move-FormerInstall {
         $localFolder = Join-Path $LocalAppDataFolder $ProductName
         if (Test-Path $formerLocalFolder) {
             Remove-PathIfPresent (Join-Path $formerLocalFolder 'Uploader')
-            if (-not (Test-Path $localFolder)) {
-                Move-FolderTo $formerLocalFolder $localFolder
-            }
-            else {
+            $isRenamed = (-not (Test-Path $localFolder)) -and (Move-FolderTo $formerLocalFolder $localFolder)
+            if (-not $isRenamed) {
                 $formerOutbox = Join-Path $formerLocalFolder 'Outbox'
                 $outbox = Join-Path $localFolder 'Outbox'
                 if (Test-Path $formerOutbox) {
                     # Complete files only: a ".partial" file is one the add-in never finished writing.
                     $waitingFiles = Get-ChildItem -Path $formerOutbox -File | Where-Object { $_.Name -like '*.snapshot.json.gz' -or $_.Name -like '*.shapes.json.gz' }
-                    if ($waitingFiles -and $PSCmdlet.ShouldProcess($outbox, 'Create the outbox')) {
+                    if ($waitingFiles -and -not $WhatIfPreference) {
                         New-Item -ItemType Directory -Force -Path $outbox | Out-Null
                     }
                     foreach ($waitingFile in $waitingFiles) {
                         Move-FileIfAbsent $waitingFile.FullName (Join-Path $outbox $waitingFile.Name)
                     }
                 }
-                Write-Host "The former $formerName folder stays at $formerLocalFolder (sent snapshots and logs); it can be deleted."
+                if (-not $WhatIfPreference) {
+                    Write-Host "The former $formerName folder stays at $formerLocalFolder (sent snapshots and logs); it can be deleted."
+                }
             }
         }
     }
@@ -97,17 +98,32 @@ function Remove-PathIfPresent {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param([string]$path)
     if ((Test-Path $path) -and $PSCmdlet.ShouldProcess($path, 'Delete')) {
-        Remove-Item -Recurse -Force -Path $path
-        Write-Host "Removed $path"
+        try {
+            Remove-Item -Recurse -Force -Path $path -ErrorAction Stop
+            Write-Host "Removed $path"
+        }
+        catch {
+            Write-Host "Could not delete $path ($($_.Exception.Message)): delete it by hand." -ForegroundColor Red
+        }
     }
 }
 
+# Whether the folder was renamed. A rename fails when a program holds a file or the folder open (a Command Prompt whose
+# current folder is inside it, a file open in an editor); the caller then moves the files that matter one by one.
 function Move-FolderTo {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param([string]$fromFolder, [string]$toFolder)
-    if ($PSCmdlet.ShouldProcess($fromFolder, "Rename to $toFolder")) {
-        Move-Item -Path $fromFolder -Destination $toFolder
+    if (-not $PSCmdlet.ShouldProcess($fromFolder, "Rename to $toFolder")) {
+        return $true
+    }
+    try {
+        Move-Item -Path $fromFolder -Destination $toFolder -ErrorAction Stop
         Write-Host "Moved $fromFolder to $toFolder"
+        return $true
+    }
+    catch {
+        Write-Host "Could not rename $fromFolder ($($_.Exception.Message)); moving its files one by one."
+        return $false
     }
 }
 
@@ -115,7 +131,13 @@ function Move-FileIfAbsent {
     [CmdletBinding(SupportsShouldProcess = $true)]
     param([string]$fromPath, [string]$toPath)
     if ((Test-Path $fromPath) -and -not (Test-Path $toPath) -and $PSCmdlet.ShouldProcess($fromPath, "Move to $toPath")) {
-        Move-Item -Path $fromPath -Destination $toPath
-        Write-Host "Moved $fromPath to $toPath"
+        try {
+            Move-Item -Path $fromPath -Destination $toPath -ErrorAction Stop
+            Write-Host "Moved $fromPath to $toPath"
+        }
+        catch {
+            # One file held open must not stop the rest: say which, so it can be moved by hand.
+            Write-Host "Could not move $fromPath to $toPath ($($_.Exception.Message)): move it by hand." -ForegroundColor Red
+        }
     }
 }

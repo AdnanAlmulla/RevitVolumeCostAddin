@@ -45,8 +45,14 @@ $productName = [System.IO.Path]::GetFileNameWithoutExtension((Get-ChildItem -Pat
 
 # A copy installed under a former name (RevitVolumeCost before 0.7.0) is removed first, and its settings and unsent
 # snapshots carried over, before the uploader below looks for its settings (see Move-FormerInstall.ps1).
+# A failure here must not leave the PC with no add-in at all: it is reported, and the install goes on.
 . (Join-Path $packageFolder 'Move-FormerInstall.ps1')
-Move-FormerInstall -ProductName $productName -RoamingAppDataFolder $env:APPDATA -LocalAppDataFolder $env:LOCALAPPDATA -StartupFolder ([Environment]::GetFolderPath('Startup'))
+try {
+    Move-FormerInstall -ProductName $productName -RoamingAppDataFolder $env:APPDATA -LocalAppDataFolder $env:LOCALAPPDATA -StartupFolder ([Environment]::GetFolderPath('Startup'))
+}
+catch {
+    Write-Host "Clearing away the former version did not finish ($($_.Exception.Message)). The install goes on; tell Adnan and send him this window's text." -ForegroundColor Red
+}
 
 $installedYearCount = 0
 foreach ($yearFolder in $yearFolders) {

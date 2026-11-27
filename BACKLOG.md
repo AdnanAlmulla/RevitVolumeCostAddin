@@ -103,8 +103,9 @@ are found by extension. Website repo T-002 tracks the rest of the rename.
 Startup shortcut and the old manifest and folder from every `Addins\<year>`, and renames `%AppData%\RevitVolumeCost` and
 `%LocalAppData%\RevitVolumeCost` (without the old uploader program) to the new name; when the new name exists already, it
 moves only the settings files and the complete unsent outbox files it lacks, never overwriting. Checked against scratch
-folders seeded with a 0.6.0 install (35 checks: a 0.6.0 PC, the new name already present, `-WhatIf`, a second run, a fresh
-PC) and with a stand-in process for the old uploader; a `-WhatIf` run of the packaged installer on the engineer's PC
+folders seeded with a 0.6.0 install (36 checks in `tests/Installer/Test-MoveFormerInstall.ps1`: a 0.6.0 PC, the new name
+already present, `-WhatIf`, a second run, a fresh PC, old folders held open so they can't be renamed) and with a stand-in
+process for the old uploader; a `-WhatIf` run of the packaged installer on the engineer's PC
 went through. Technician sheets updated (`sync-instructions.md`, and `release-check.md` section A–B for this item).
 Same batch: ribbon icons for both themes, a Help button, a failed Sync to website said plainly, the ribbon can't cost the
 after-sync snapshot, the uploader's log bounded and unable to end it, refused snapshots' shapes stop retrying.

@@ -198,6 +198,7 @@ src/Addin/            Revit add-in, configurations R24 and R26 (others when need
   Json/, Units/       pure code (no Revit API), compiled into the tests by path
   RevitApi/           ElementIds: the one place an ElementId becomes a number
 tests/Addin.Tests/    xUnit, pure source compiled in by path
+tests/Installer/      Test-MoveFormerInstall.ps1: the installer's migration, against scratch folders (never the real ones)
 installer/            Install.cmd + Install-Addin.ps1 + Move-FormerInstall.ps1, shipped in the hand-off package
 docs/technician/      sync-instructions.md (the sheet: READ ME FIRST, and Help opens it) and release-check.md
 tools/                Draw-RibbonIcons.ps1: draws the icon PNGs from outlines; -Preview shows them on both themes

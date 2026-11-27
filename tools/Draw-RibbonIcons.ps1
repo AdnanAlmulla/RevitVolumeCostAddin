@@ -37,7 +37,8 @@ $ICONS = [ordered]@{
     }
 }
 
-# One colour per theme, chosen against the ribbon's own background (measured from screenshots of Revit 2024/2026).
+# One colour per theme, chosen against the ribbon's background. The ribbon colours are estimates, not measured: confirm
+# them from the technician's screenshots of the ribbon in each theme (docs/technician/release-check.md steps 6 and 7).
 $THEMES = [ordered]@{
     'light' = @{ Ink = '#3A4149'; Ribbon = '#F0F0F0' }
     'dark'  = @{ Ink = '#D9DDE2'; Ribbon = '#3B4048' }
