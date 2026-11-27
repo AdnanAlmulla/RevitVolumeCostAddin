@@ -42,7 +42,8 @@ Build the whole package, then install it on your own PC as a technician would:
 powershell -NoProfile -ExecutionPolicy Bypass -File .\Build-Package.ps1
 ```
 
-It runs the tests, then writes `artifacts\Telltale-<version>\` and its `.zip`. Close Revit, double-click
+It runs the tests, then writes `artifacts\Telltale-<version>\` and its `.zip` (`-Version 0.7.1` builds a test release
+under another number, for trying the update path). Close Revit, double-click
 `Install.cmd` in that folder, then start Revit. Each install replaces the previous one. Snapshots are written to
 `%LocalAppData%\Telltale\Outbox`, and the add-in's log is `%LocalAppData%\Telltale\Logs\addin.log`.
 
