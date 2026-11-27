@@ -185,6 +185,19 @@ The stale shortcut sits on that technician's PC (installed 14:08 from an early 0
 **Acceptance:** The trial (`tests/Updates/Test-UpdateEndToEnd.ps1`) sees the up-to-date line and the second-copy line; a
 scratch Startup folder's old shortcut is removed (pass the Startup folder as an override, as the AppData folders are).
 
+### [T-006] P3 — Dialog titles repeat the product name (next version)
+<!-- type: tech debt | added: 2026-11-27 -->
+**What:** The "restart Revit please" note's title bar reads "Telltale - Telltale" (engineer, 2026-11-27, on the
+technician's PC: "Something to fix for the future"). Revit puts the add-in's name (the manifest's Name) in front of each
+TaskDialog title, and `UpdateNotice` passes the product name as the title. Give each dialog a title of its own, without
+the product name: the note "Update ready", Help "Help" (now "Telltale - Telltale help"), "Parameter standard" and "Check
+for updates" windows are WPF (no prefix) and stay as they are. Sync to website, Raw dump and the failure messages already
+have their own titles.
+**Where:** `src/Addin/Updates/UpdateNotice.cs`, `src/Addin/Commands/HelpCommand.cs` (both TaskDialogs and its error box).
+**Acceptance:** In Revit the note reads "Telltale - Update ready" and Help "Telltale - Help" (technician's check).
+**Notes:** First sighting of the note in Revit: it appeared on the technician's PC on 2026-11-27 after the update from
+0.7.0 (engineer, 12:01 UTC). Batch with T-005.
+
 ## Done
 
 - [[F-002]](docs/backlog-archive.md#f-002-division-element-kind-and-concrete-grade-conventions) Conventions agreed: a parameter standard the technicians follow — 2026-11-26
