@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-**The Revit add-in of Telltale** (GitHub repo `TelltaleAddin`; the clone's folder on the engineer's PC is still `RevitVolumeCostAddin`): a Revit add-in for Revit
+**The Revit add-in of Telltale** (repo `TelltaleAddin`): a Revit add-in for Revit
 2022–2027 that reads the quantities of a structural model (concrete, steel and other materials) and sends them, as a snapshot, to the
 project's internal website. It also holds the **snapshot classes** (`src/Contracts`) that the website's API
 compiles against.
@@ -45,7 +45,7 @@ the tower (0.9 to 1.4 s, F-003). Version 0.6.0 writes the shapes beside every sn
 "Yes, the sync should send the shape. I wouldn't want them to click on the 3D button each time"); the button is gone.
 
 **Where things stand (end of 2026-11-26):** 0.6.0 is with the engineer and **not yet run in Revit**. He first agrees the
-parameters with the technicians (2026-11-27; `RevitVolumeCost/docs/Revit parameter standard.xlsx`, names in the
+parameters with the technicians (2026-11-27; `Telltale/docs/Revit parameter standard.xlsx`, names in the
 website's `appsettings.json` "Classification"), then has 0.6 tested on a tagged model. Its first sync proves the shapes
 after a sync and their upload; the website side is live. **He does not want to re-issue versions lightly: hold add-in
 changes and batch them into one version.** Models are assumed to be on ACC (engineer, 2026-11-26: the technicians are
@@ -239,7 +239,7 @@ _harnesses/           throwaway probes, never part of a build
 - **Work tracking:** `BACKLOG.md` + `docs/backlog-archive.md` (IDs `F-` feature, `B-` bug, `T-` tech
   debt, never reused). This repo's IDs are its own; the website repo has a separate list.
 - **AGENTS.md** mirrors this file for Codex. Apply every edit to both.
-- Remote: https://github.com/AdnanAlmulla/TelltaleAddin (**public**, 2026-11-25; renamed from `RevitVolumeCostAddin` on 2026-11-27, GitHub forwards the old address). The website builds against a clone of it in a folder named `RevitVolumeCostAddin` beside the website clone, until the folders are renamed (website T-002).
+- Remote: https://github.com/AdnanAlmulla/TelltaleAddin (**public**, 2026-11-25; renamed from `RevitVolumeCostAddin` on 2026-11-27, GitHub forwards the old address). The website builds against a clone of it in a folder named `TelltaleAddin` beside the website clone.
 - **No licence** (engineer, 2026-11-25): the repo carries no open-source licence, so no one is granted the right
   to copy or reuse the code. Don't add a `LICENSE` file or licence text. Because it is public, never commit
   secrets, tenant or client ids, internal paths or company cost data here. **Never commit a dump, snapshot or
