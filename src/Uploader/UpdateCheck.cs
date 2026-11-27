@@ -29,19 +29,25 @@ namespace Uploader
         private readonly string productName;
         private readonly string localProductFolder;
         private readonly string addinsRootFolder;
-        private readonly bool isTrialRun;
+        private readonly bool mayChangeStartAtSignIn;
+        private readonly bool mayHandOver;
+        private readonly IReadOnlyList<string> successorArguments;
         private readonly Action<string> log;
         private DateTime nextCheckUtc = DateTime.MinValue;
         private Version? uploaderVersionThatFailedToStart;
 
-        /// <param name="isTrialRun">A run against scratch folders or a single pass: it installs into the folders but never
-        /// touches the registry and never restarts the uploader.</param>
-        public UpdateCheck(string productName, string localAppDataFolder, string roamingAppDataFolder, bool isTrialRun, Action<string> log)
+        /// <param name="mayChangeStartAtSignIn">False for a trial against scratch folders: the registry is never touched.</param>
+        /// <param name="mayHandOver">False for a single pass (--once): the new uploader is installed but not started.</param>
+        /// <param name="successorArguments">This copy's own arguments (a trial's folder overrides), passed on to its successor.</param>
+        public UpdateCheck(string productName, string localAppDataFolder, string roamingAppDataFolder, bool mayChangeStartAtSignIn,
+            bool mayHandOver, IReadOnlyList<string> successorArguments, Action<string> log)
         {
             this.productName = productName;
             localProductFolder = Path.Combine(localAppDataFolder, productName);
             addinsRootFolder = Path.Combine(roamingAppDataFolder, "Autodesk", "Revit", "Addins");
-            this.isTrialRun = isTrialRun;
+            this.mayChangeStartAtSignIn = mayChangeStartAtSignIn;
+            this.mayHandOver = mayHandOver;
+            this.successorArguments = successorArguments;
             this.log = log;
         }
 
@@ -182,13 +188,17 @@ namespace Uploader
         /// </summary>
         private void HandOverTo(string newUploaderPath, Version newVersion)
         {
-            if (isTrialRun)
+            if (!mayHandOver)
             {
-                log($"update: uploader {newVersion} installed at {newUploaderPath}; not started (trial run)");
+                log($"update: uploader {newVersion} installed at {newUploaderPath}; not started (single pass)");
                 return;
             }
             log($"update: starting uploader {newVersion} ({newUploaderPath})");
             var startInfo = new ProcessStartInfo(newUploaderPath) { UseShellExecute = false, WorkingDirectory = Path.GetDirectoryName(newUploaderPath)! };
+            foreach (string argument in successorArguments)
+            {
+                startInfo.ArgumentList.Add(argument);
+            }
             startInfo.ArgumentList.Add("--after");
             startInfo.ArgumentList.Add(Environment.ProcessId.ToString());
             using Process? newUploader = Process.Start(startInfo);
@@ -209,7 +219,7 @@ namespace Uploader
         /// </summary>
         public void StartAtSignInFromHere()
         {
-            if (isTrialRun)
+            if (!mayChangeStartAtSignIn)
             {
                 return;
             }

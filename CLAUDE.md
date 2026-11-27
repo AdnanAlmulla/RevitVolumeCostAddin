@@ -234,7 +234,7 @@ _harnesses/           throwaway probes, never part of a build
   `Build-Package.ps1` refuses to package if any DLL but ours is in the build output.
 - **The hand-off package** (`powershell -ExecutionPolicy Bypass -File .\Build-Package.ps1`): tests, then
   `artifacts\<product>-<version>\` and its `.zip`, holding one folder per Revit year (`<product>.addin` +
-  `<product>\<product>.dll`), `Install.cmd` and the instruction sheet. The installer copies each year's files
+  `<product>\<version>\<product>.dll`), the uploader, `Install.cmd` and the instruction sheets. The installer copies each year's files
   to `%AppData%\Autodesk\Revit\Addins\<year>\` for each Revit installed, removes Windows' "downloaded" mark
   (Revit 2024 can refuse a marked DLL), refuses while Revit is open, and never runs the add-in from a network share (the ETABS crash of 2026-11-23).
 - **3D shapes ride with every snapshot** (0.6.0): `ShapeOutbox` writes `<snapshot name>.shapes.json.gz` beside it in
@@ -293,12 +293,12 @@ _harnesses/           throwaway probes, never part of a build
   saves `GET /api/parameter-standard` to `%LocalAppData%\<product>\parameter-standard.json`; the window reads it with
   `DataContractJsonSerializer` (part of .NET Framework and .NET 8: no file shipped) and shows it only when complete
   (version, date, each parameter with a name, values and categories), else the built-in copy. `Build-Package.ps1
-  -Version x.y.z` builds a test release. Trial runs (`--once` or the folder overrides) install into the folders but never
-  touch the registry or restart. **Checked:** unit tests, and `tests/Updates/Test-UpdateEndToEnd.ps1` (a real 0.7.0
-  uploader updated scratch folders to a 0.7.1 test package from a stand-in site: 17 checks, a corrupted download and a
-  site that is down included). **Not checked:** anything in Revit (the note, a version-folder manifest path, loading
-  the new version), the hand-over to a new uploader and the Run entry (never run here: they act on the real registry and
-  processes), and antivirus. The hash proves the download is whole, not who made it: the site is plain http and the
+  -Version x.y.z` builds a test release. The folder overrides never touch the registry; `--once` never hands over. The
+  update check runs after the outbox is sent, so a bad release can't hold snapshots back. **Checked:** unit tests, and
+  `tests/Updates/Test-UpdateEndToEnd.ps1` (real 0.7.0 uploaders against a stand-in site offering a 0.7.1 test package,
+  scratch folders: 21 checks, including a running uploader handing over to 0.7.1, a corrupted download and a site that is
+  down). **Not checked:** anything in Revit (the note, a version-folder manifest path, loading the new version), the Run
+  entry (it acts on the real registry), the real installer beyond `-WhatIf`, and antivirus. The hash proves the download is whole, not who made it: the site is plain http and the
   files are unsigned. A PC without .NET 8 has no uploader, so no updates.
 - The DLL is **unsigned**, so Revit asks once ("Load Once" / "Always Load"). Code signing is not set up.
 - A cloud model can't be opened in a newer Revit without upgrading it for everyone, so a Revit step always

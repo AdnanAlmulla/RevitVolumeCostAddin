@@ -46,7 +46,7 @@ try {
     $standardPath = Join-Path $install.Local 'Telltale\parameter-standard.json'
     Check ((Test-Path $standardPath) -and ((Get-Content -Raw $standardPath) -match 'a1b2c3d4e5f6')) 'good: the website standard saved'
     $log = Get-Content -Raw (Join-Path $install.Local 'Telltale\Logs\uploader.log')
-    Check ($log -match 'not started \(trial run\)') 'good: a trial run does not start the new uploader'
+    Check ($log -match 'not started \(single pass\)') 'good: a single pass does not start the new uploader'
     Check (@(Get-ChildItem -Recurse $install.Roaming -Filter '*.partial').Count -eq 0) 'good: no half-written file left'
     # A second run finds nothing more to do.
     Invoke-UploaderOnce $install | Out-Null
@@ -70,6 +70,29 @@ try {
     Check ($log -match 'does not match its size and checksum') 'corrupt: logged'
 }
 finally { Stop-Process -Id $site.Id -Force }
+
+# Case 4: a running uploader hands over to its new version: the old one ends, the new one runs from Uploader\0.7.1.
+# (Scratch folders: the registry is never touched.)
+$site = Start-Process -FilePath $Python -ArgumentList "`"$scratchpad\stub_site.py`"", "`"$zip071`"", '5099' -PassThru -WindowStyle Hidden
+Start-Sleep -Seconds 2
+try {
+    $install = New-Install (Join-Path $scratch 'handover')
+    $oldUploader = Start-Process -FilePath $install.Uploader -ArgumentList '--local-app-data', "`"$($install.Local)`"", '--roaming-app-data', "`"$($install.Roaming)`"" -PassThru
+    $hasOldEnded = $oldUploader.WaitForExit(60000)
+    Check $hasOldEnded 'handover: the 0.7.0 uploader ended'
+    $newProgram = Join-Path $install.Local 'Telltale\Uploader\0.7.1\Telltale.Uploader.exe'
+    Start-Sleep -Seconds 3
+    $newUploaders = @(Get-Process -Name 'Telltale.Uploader' -ErrorAction SilentlyContinue | Where-Object { $_.Path -eq $newProgram })
+    Check ($newUploaders.Count -eq 1) 'handover: one uploader runs, from Uploader\0.7.1'
+    $log = Get-Content -Raw (Join-Path $install.Local 'Telltale\Logs\uploader.log')
+    Check ($log -match 'uploader 0\.7\.1 is running; this one \(0\.7\.0\) ends') 'handover: the old one logged the hand-over'
+    Check ($log -match 'Started 0\.7\.1') 'handover: the new one started'
+    $newUploaders | Stop-Process -Force
+}
+finally {
+    Stop-Process -Id $site.Id -Force
+    Get-Process -Name 'Telltale.Uploader' -ErrorAction SilentlyContinue | Where-Object { $_.Path -like "$scratch*" } | Stop-Process -Force
+}
 
 # Case 3: the site is down: nothing changes, and the uploader still ends its pass.
 $install = New-Install (Join-Path $scratch 'down')

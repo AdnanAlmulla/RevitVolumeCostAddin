@@ -10,7 +10,7 @@ using Uploader;
 //   <product>.Uploader.exe --once   one pass, then exits
 //   --site <address> and --outbox <folder> override the settings (for a check against a test site)
 //   --local-app-data <folder> and --roaming-app-data <folder> stand in for Windows' own folders: a trial run against
-//                                   scratch folders, which also never touches the registry or restarts the uploader
+//                                   scratch folders, which never touches the registry (--once never starts a new uploader)
 //   --after <process id>            used by an updating uploader when it starts its successor: wait for it to end first
 // It also installs newer releases the website offers, and saves the website's parameter standard (UpdateCheck).
 // The website's address and its site password are per-PC settings in %AppData%\<product>\uploader.json, never
@@ -42,7 +42,15 @@ string rejectedFolder = Path.Combine(outboxFolder, "Rejected");
 string settingsPath = Path.Combine(roamingAppData, productName, "uploader.json");
 string logPath = Path.Combine(localAppData, productName, "Logs", "uploader.log");
 bool isOnePass = args.Contains("--once");
-bool isTrialRun = isOnePass || ArgumentAfter("--local-app-data") != null || ArgumentAfter("--roaming-app-data") != null;
+// A trial against scratch folders never touches the registry; a single pass never hands over to a new uploader.
+bool isScratchTrial = ArgumentAfter("--local-app-data") != null || ArgumentAfter("--roaming-app-data") != null;
+// This copy's arguments without "--after <id>", for the successor an update starts.
+List<string> successorArguments = new List<string>(args);
+int afterPosition = successorArguments.IndexOf("--after");
+if (afterPosition >= 0)
+{
+    successorArguments.RemoveRange(afterPosition, Math.Min(2, successorArguments.Count - afterPosition));
+}
 
 // An uploader updating itself starts this copy and then ends: wait for it, so the two never run together.
 if (int.TryParse(ArgumentAfter("--after"), out int predecessorProcessId))
@@ -70,7 +78,8 @@ Directory.CreateDirectory(sentFolder);
 Directory.CreateDirectory(rejectedFolder);
 Directory.CreateDirectory(Path.GetDirectoryName(logPath)!);
 Log($"Started {UpdateCheck.RunningVersion}. Sending {outboxFolder}. Settings: {settingsPath}");
-var updateCheck = new UpdateCheck(productName, localAppData, roamingAppData, isTrialRun, Log);
+var updateCheck = new UpdateCheck(productName, localAppData, roamingAppData, mayChangeStartAtSignIn: !isOnePass && !isScratchTrial,
+    mayHandOver: !isOnePass, successorArguments, Log);
 
 while (true)
 {
@@ -106,7 +115,6 @@ async Task SendOutboxAsync()
     {
         http.DefaultRequestHeaders.Add(SITE_PASSWORD_HEADER, sitePassword);
     }
-    await updateCheck.RunWhenDueAsync(http);
     string[] snapshotPaths = Directory.GetFiles(outboxFolder, SNAPSHOT_FILE_PATTERN).OrderBy(path => path).ToArray();
     string[] shapesPaths = Directory.GetFiles(outboxFolder, SHAPES_FILE_PATTERN).OrderBy(path => path).ToArray();
     foreach (string snapshotPath in snapshotPaths)
@@ -125,6 +133,8 @@ async Task SendOutboxAsync()
         }
         await SendAsync(http, shapesPath, SHAPES_UPLOAD_PATH);
     }
+    // After the outbox, so a release that goes wrong can never keep snapshots from being sent first.
+    await updateCheck.RunWhenDueAsync(http);
 }
 
 async Task SendAsync(HttpClient client, string filePath, string uploadPath)

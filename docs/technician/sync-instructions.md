@@ -7,7 +7,8 @@ password again, and snapshots not yet sent are sent.
 
 **From 0.7, new versions install themselves.** The uploader fetches each new version Adnan releases and installs it
 in the background. When one is ready, Revit shows **"New version of Telltale Addin ready, restart Revit please"**:
-finish what you are doing, close Revit and start it again. You won't need to run Install.cmd again.
+finish what you are doing, close Revit and start it again. If Revit then asks about an unsigned add-in, choose **Always
+Load**. You won't need to run Install.cmd again.
 
 The add-in takes a snapshot of the model's quantities, with its 3D shapes, **by itself after every successful
 Synchronize with Central** on a cloud (ACC) model. Nothing pops up. Revit is busy for a few seconds after each sync while

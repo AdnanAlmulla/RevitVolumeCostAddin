@@ -153,12 +153,12 @@ for the endpoints and "Publish add-in.cmd". CLAUDE.md "Updates" has the design.
 **Acceptance:** On a technician's PC with 0.7.0, a published test 0.7.1 is installed by itself, the note shows once in an
 open Revit, the next Revit start runs 0.7.1, the uploader runs from `Uploader\0.7.1` and starts from there at sign-in
 (release check section F).
-**Progress (2026-11-27):** Built and committed. 23 new unit tests; `tests/Updates/Test-UpdateEndToEnd.ps1` passed (a real
-0.7.0 uploader updated scratch folders to a 0.7.1 test package from a stand-in site, 17 checks: manifest repointed, old
-version kept, Revit 2024 left alone when not installed, uploader staged, standard saved, a second run idle, a corrupted
-download installing nothing, a site that is down changing nothing). The website side is committed (website repo e19227c,
-976a4a1), not live until a site restart Adnan approves. Not checked: Revit itself, the uploader hand-over and Run entry
-(they act on the real registry and processes), antivirus. Open, for the engineer: whether to sign releases (the hash
+**Progress (2026-11-27):** Built and committed. 23 new unit tests; `tests/Updates/Test-UpdateEndToEnd.ps1` passed (real
+0.7.0 uploaders against a stand-in site offering a 0.7.1 test package, scratch folders, 21 checks: manifest repointed, old
+version kept, Revit 2024 left alone when not installed, uploader staged, standard saved, a second run idle, a running
+uploader handing over to 0.7.1 and ending, a corrupted download installing nothing, a site that is down changing nothing). The website side is committed (website repo e19227c,
+976a4a1), not live until a site restart Adnan approves. Not checked: Revit itself, the Run entry (it acts on the real
+registry), the real installer beyond `-WhatIf`, antivirus. Open, for the engineer: whether to sign releases (the hash
 proves the download is whole, not who made it; the site is plain http).
 
 ## Done
