@@ -152,7 +152,10 @@ window reads the standard from the site, and the technician sees that note (not 
 for the endpoints and "Publish add-in.cmd". CLAUDE.md "Updates" has the design.
 **Acceptance:** On a technician's PC with 0.7.0, a published test 0.7.1 is installed by itself, the note shows once in an
 open Revit, the next Revit start runs 0.7.1, the uploader runs from `Uploader\0.7.1` and starts from there at sign-in
-(release check section F).
+(release check sections B and F).
+**Progress (2026-11-27, 11:19 UTC):** Adnan published the test 0.7.1 on the website (checked: latest.json, the download
+serves the same bytes, SHA-256 a3fb5e8d...). Nobody had 0.7.0 yet, so PCs installing 0.7.0 move to 0.7.1 straight away;
+the release check now checks that in section B and leaves the message (section F) for the next release.
 **Progress (2026-11-27):** Built and committed. 23 new unit tests; `tests/Updates/Test-UpdateEndToEnd.ps1` passed (real
 0.7.0 uploaders against a stand-in site offering a 0.7.1 test package, scratch folders, 21 checks: manifest repointed, old
 version kept, Revit 2024 left alone when not installed, uploader staged, standard saved, a second run idle, a running

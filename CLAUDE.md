@@ -59,8 +59,10 @@ at the moment beyond 0.7.0.
 0.6.0's untested shapes-after-sync with the rename to Telltale (T-001), ribbon icons for Revit's light and dark themes,
 a Help button, a Parameter standard window, **updates through the uploader** (below), Raw dump moved out of sight, sent
 files kept 90 days, and robustness fixes (below). **0.7.0 is meant to be the last zip handed out** (engineer, 2026-11-27):
-that holds only once a real update has run on a technician's PC (release check section F, with a test 0.7.1 that Adnan
-publishes; the next real release is then 0.7.2 or later). One technician runs `docs/technician/release-check.md` (shipped in the
+that holds only once a real update has run on a technician's PC. **Adnan published a test 0.7.1 on the website on
+2026-11-27** (11:19 UTC, before anyone had 0.7.0), so a PC that installs 0.7.0 moves to 0.7.1 within minutes (release
+check section B); the "restart Revit" message needs Revit open when an update lands, so it is checked with the next
+release (section F). The next real release is 0.7.2 or later. One technician runs `docs/technician/release-check.md` (shipped in the
 package as "Release check.txt") on a PC with 0.6.0 before it goes to everyone. The shared parameters being agreed with
 the technicians never break the snapshot: it names no parameter and sends them all. The **Parameter standard** window
 shows the website's copy of the standard when the uploader has fetched one, else the copy built in
