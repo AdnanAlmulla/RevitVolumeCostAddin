@@ -112,6 +112,41 @@ after-sync snapshot, the uploader's log bounded and unable to end it, refused sn
 files kept 90 days (T-002), Raw dump in the panel's slide-out (T-003).
 Still to do: the technician's release check on a PC with 0.6.0 (the acceptance above).
 
+### [F-005] P2 — Parameter standard window in the add-in (built in 0.7.0, awaiting its Revit check)
+<!-- type: feature | added: 2026-11-27 -->
+**What:** A window in Revit that covers what the Excel parameter standard does (website repo,
+`docs/Revit parameter standard.xlsx`): each shared parameter, its allowed values, categories, what to fill and what a blank
+means, then the settings, rules and examples.
+**Why:** Engineer, 2026-11-27, after agreeing the parameters with the technicians: "The excel is good, but the plugin needs to
+carry the identity of the latest instance parameters." The same day he added Roof to Division_Shared and Upstand to
+Wall Function_Shared.
+**Where:** `src/Addin/Standard/ParameterStandard.cs` (the standard, pure, tested), `ParameterStandardWindow.cs` (WPF built in
+code), `Commands/ParameterStandardCommand.cs`, the Parameter standard button in `App.cs`, icon "parameters".
+**Acceptance:** In Revit the window opens from the ribbon with no model open and matches the Excel sheet word for word
+(release check step 9).
+**Progress (2026-11-27):** Built into 0.7.0: 7 tests on the standard (the five names, Roof, Upstand, blanks, no stray
+spaces), compiles for Revit 2024 and 2026, the window rendered outside Revit and looked at. Not yet seen in Revit. Every
+later change to the standard is a change here, in the Excel sheet and on the website.
+
+### [F-006] P3 — Check the open model against the standard (proposed, engineer's call)
+<!-- type: feature | added: 2026-11-27 -->
+**What:** From the Parameter standard window, count in the open model, per parameter, the elements left blank and those
+holding a value not on the list (a misspelling the website would show as "Unassigned"), and select them in Revit.
+**Why:** The website matches values exactly; catching a misspelling in Revit, before the sync, saves a round trip.
+**Where:** `src/Addin/Standard/` (a pure rule over values, tested; a thin Revit read reusing `SnapshotReader.ModelElements`).
+**Acceptance:** On a test model with known blanks and misspellings the counts are right and Select highlights them.
+**Notes:** Not asked for: offered on 2026-11-27. Read-only. Ships only in a batched release.
+
+### [T-004] P3 — One copy of the standard for the add-in and the website (proposed, engineer's call)
+<!-- type: tech debt | added: 2026-11-27 -->
+**What:** Move `ParameterStandard.cs` into `src/Contracts`, which the website already compiles in, so the website reads its
+parameter names and allowed values from the same file as the add-in's window.
+**Why:** Today the standard lives in three places (the Excel sheet, this add-in, the website's settings and rules), so a
+change made in one can be missed in another.
+**Where:** `src/Contracts/`, and the website repo's classification rules and `addin-ref.txt` pin.
+**Acceptance:** The website builds against the moved file and its rules use its lists; the add-in window is unchanged.
+**Notes:** Touches `src/Contracts`, so it needs the engineer's say-so and a matching website change (CLAUDE.md "How work lands here").
+
 ## Done
 
 - [[F-002]](docs/backlog-archive.md#f-002-division-element-kind-and-concrete-grade-conventions) Conventions agreed: a parameter standard the technicians follow — 2026-11-26

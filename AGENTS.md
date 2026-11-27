@@ -57,9 +57,12 @@ at the moment beyond 0.7.0.
 
 **Where things stand (2026-11-27):** **0.7.0 is built and committed, not handed out, not run in Revit.** It batches
 0.6.0's untested shapes-after-sync with the rename to Telltale (T-001), ribbon icons for Revit's light and dark themes,
-a Help button, Raw dump moved out of sight, sent files kept 90 days, and robustness fixes (below). One technician runs `docs/technician/release-check.md` (shipped in the
+a Help button, a Parameter standard window, Raw dump moved out of sight, sent files kept 90 days, and robustness fixes (below). One technician runs `docs/technician/release-check.md` (shipped in the
 package as "Release check.txt") on a PC with 0.6.0 before it goes to everyone. The shared parameters being agreed with
-the technicians need no add-in release: no parameter name is written in the add-in.
+the technicians never break the snapshot: it names no parameter and sends them all. But the **Parameter standard**
+window carries the standard as agreed on 27 Nov 2026 (`src/Addin/Standard/ParameterStandard.cs`, engineer: "the plugin
+needs to carry the identity of the latest instance parameters"), so a changed standard needs a new add-in version for the
+window to show it, and the same change in the Excel sheet (website repo) and on the website.
 
 ## How work lands here
 
@@ -189,7 +192,8 @@ add-in's.
 ```
 src/Addin/            Revit add-in, configurations R24 and R26 (others when needed)
   App.cs              starts with Revit: the snapshot after each Synchronize with Central, then the ribbon tab
-  Commands/           SyncCommand (Sync to website), RawDumpCommand, HelpCommand; all read-only
+  Commands/           SyncCommand (Sync to website), ParameterStandardCommand, RawDumpCommand, HelpCommand; all read-only
+  Standard/           ParameterStandard (pure, tested): the parameter standard, written once; ParameterStandardWindow (WPF, in code)
   Ribbon/, Resources/ RibbonIcons loads the icons embedded from Resources/Icons (light and dark, 32 and 16 px)
   UploaderSettingsFile.cs, AddinSettings.cs   pure: the website's address for Help; the after-sync switch
   Shapes/             ShapeOutbox and ShapeReader (Revit); ShapeMesh and ShapeFile (pure, tested): the "shapes-1" file
@@ -249,8 +253,10 @@ _harnesses/           throwaway probes, never part of a build
   (engineer, 2026-11-27; the website keeps its own copy of every file in `%LocalAppData%\Telltale\Snapshots` and
   `Shapes` on the host PC); the uploader stamps the sending time on the file and deletes older ones at each pass.
   `Rejected` is never emptied.
-- **The ribbon** (0.7.0): tab `<product>`, panels Quantities (Sync to website; Raw dump in the panel's slide-out, out of sight, engineer
-  2026-11-27) and Help. The after-sync
+- **The ribbon** (0.7.0): tab `<product>`, panels Quantities (Sync to website, Parameter standard; Raw dump in the panel's
+  slide-out, out of sight, engineer 2026-11-27) and Help. **Parameter standard** works with no model open and shows the
+  Excel sheet's content from `ParameterStandard`: one row per shared parameter (allowed values, categories, what to fill,
+  what a blank means), then settings, rules and examples; names and values can be copied. It reads nothing from the model. The after-sync
   handler is hooked up before the ribbon is built, and the ribbon is built inside a try, so nothing on it can cost a
   snapshot. Icons: one flat colour per theme, chosen from `UIThemeManager.CurrentTheme` and swapped on `ThemeChanged`
   (both in the 2024 and 2026 API; called from `NoInlining` methods inside a try). **Help** works with no model open

@@ -1,7 +1,7 @@
 # Telltale add-in 0.7: instructions for the BIM technicians
 
 **New in 0.7:** the add-in is now called **Telltale** (it was RevitVolumeCost). Its tab in Revit is **Telltale**, its
-buttons have icons, and a **Help** button shows whether snapshots are waiting to be sent and opens this sheet. Installing
+buttons have icons, a **Parameter standard** button shows the parameters to fill in and their values, and a **Help** button shows whether snapshots are waiting to be sent and opens this sheet. Installing
 0.7 removes the old RevitVolumeCost add-in and uploader by itself and keeps your settings: you are not asked for the
 password again, and snapshots not yet sent are sent.
 
@@ -32,6 +32,9 @@ The first time on a PC, get two things from Adnan: the **website address** and t
 Synchronize with Central as you always do. On the **Telltale** tab:
 
 - **Sync to website** takes a snapshot now, on any project model (a detached copy too).
+- **Parameter standard** shows the shared parameters to fill in on each element (Division_Shared, Concrete Grade_Shared,
+  Structural System_Shared, Wall Function_Shared, Steel Grade_Shared), the values to type, spelled exactly, and the
+  rules, as agreed with Adnan. You can copy a value from it and paste it into Revit.
 - **Raw dump** writes every element with all its parameters to one file, for checking. Use it only when Adnan asks. It
   is out of sight: click the small arrow beside the **Quantities** panel's name to show it.
 - **Help** shows the add-in's version, whether this PC takes the snapshot after each sync, and how many snapshots are
